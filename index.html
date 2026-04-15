@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Max Schenk — Game Designer</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #08080e;
+      --bg-card:     #10101a;
+      --bg-card2:    #14141f;
+      --border:      rgba(255,255,255,0.07);
+      --text:        #dde0eb;
+      --muted:       #7a7f99;
+      --accent-tog:  #4a8fff;
+      --accent-tbh:  #c9883a;
+      --white:       #ffffff;
+      --radius:      12px;
+      --max:         1100px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Nav ──────────────────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(8,8,14,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: 0.04em;
+      color: var(--white);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--white); }
+
+    /* ── Hero ─────────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(74,143,255,0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(201,136,58,0.06) 0%, transparent 60%);
+    }
+
+    .hero-eyebrow {
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent-tog);
+      margin-bottom: 1.2rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.4rem;
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--muted);
+      max-width: 580px;
+      margin: 0 auto 2.8rem;
+    }
+
+    .hero-links {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.5rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      transition: opacity 0.2s, transform 0.15s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    .btn-primary {
+      background: var(--accent-tog);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.25); }
+
+    /* ── Sections ─────────────────────────────────────────────── */
+    section {
+      padding: 6rem 2rem;
+      max-width: var(--max);
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+    }
+
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.2rem;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      max-width: 640px;
+      font-size: 1.02rem;
+    }
+
+    /* ── Divider ──────────────────────────────────────────────── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      max-width: var(--max);
+      margin: 0 auto;
+    }
+
+    /* ── About ────────────────────────────────────────────────── */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      margin-top: 3rem;
+      align-items: start;
+    }
+
+    .about-text p + p { margin-top: 1rem; }
+
+    .skills-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 1.4rem;
+    }
+
+    .skill-tag {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.3rem 0.85rem;
+      font-size: 0.82rem;
+      color: var(--text);
+      letter-spacing: 0.02em;
+    }
+
+    .about-info { display: flex; flex-direction: column; gap: 1.2rem; }
+
+    .info-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem 1.6rem;
+    }
+
+    .info-card h4 {
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .info-card p { font-size: 0.95rem; color: var(--text); }
+
+    /* ── Project: shared chrome ───────────────────────────────── */
+    .project-section { position: relative; }
+
+    .project-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .project-badge {
+      display: inline-block;
+      padding: 0.25rem 0.9rem;
+      border-radius: 3px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.7rem;
+    }
+
+    .badge-tog  { background: rgba(74,143,255,0.15); color: var(--accent-tog); }
+    .badge-tbh  { background: rgba(201,136,58,0.15); color: var(--accent-tbh); }
+
+    /* ── TOG Gallery ──────────────────────────────────────────── */
+    .gallery-hero {
+      width: 100%;
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .gallery-hero img {
+      width: 100%;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+
+    .gallery-hero:hover img { transform: scale(1.02); }
+
+    .gallery-strip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 3rem;
+    }
+
+    .gallery-thumb {
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      aspect-ratio: 16/9;
+    }
+
+    .gallery-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease, filter 0.3s ease;
+      filter: brightness(0.85);
+    }
+
+    .gallery-thumb:hover img {
+      transform: scale(1.06);
+      filter: brightness(1);
+    }
+
+    /* ── Systems Grid ─────────────────────────────────────────── */
+    .systems-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .system-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.6rem;
+      transition: border-color 0.2s;
+    }
+
+    .system-card:hover { border-color: rgba(74,143,255,0.3); }
+
+    .system-card h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 0.5rem;
+    }
+
+    .system-card p {
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .system-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: rgba(74,143,255,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      margin-bottom: 0.9rem;
+    }
+
+    /* ── TOG accent line ──────────────────────────────────────── */
+    .tog-accent { border-left: 3px solid var(--accent-tog); padding-left: 1.2rem; margin: 2rem 0; }
+    .tog-accent p { color: var(--text); font-size: 1rem; font-style: italic; }
+
+    /* ── The Broken Hero ──────────────────────────────────────── */
+    .tbh-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3.5rem;
+      margin-top: 1rem;
+      align-items: start;
+    }
+
+    .tbh-role-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.7rem;
+      margin-top: 1.5rem;
+    }
+
+    .tbh-role-block h4 {
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-tbh);
+      margin-bottom: 0.8rem;
+    }
+
+    .tbh-role-block ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .tbh-role-block li {
+      font-size: 0.9rem;
+      color: var(--text);
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .tbh-role-block li::before {
+      content: "–";
+      color: var(--accent-tbh);
+      flex-shrink: 0;
+    }
+
+    .tbh-visual {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .tbh-placeholder {
+      width: 100%;
+      aspect-ratio: 16/9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1rem;
+      background: linear-gradient(135deg, #1a120a 0%, #2a1a0a 100%);
+      color: var(--accent-tbh);
+    }
+
+    .tbh-placeholder .icon { font-size: 3rem; }
+
+    .tbh-placeholder p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-align: center;
+      padding: 0 1.5rem;
+    }
+
+    .tbh-meta {
+      padding: 1.2rem 1.4rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .tbh-meta-item { font-size: 0.8rem; color: var(--muted); }
+    .tbh-meta-item span { color: var(--text); font-weight: 600; display: block; }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.6rem;
+      margin-top: 1.5rem;
+    }
+
+    .team-member {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+    }
+
+    .team-member .name { font-size: 0.875rem; color: var(--white); font-weight: 600; }
+    .team-member .role { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; }
+
+    .team-member.highlight { border-color: rgba(201,136,58,0.4); background: rgba(201,136,58,0.05); }
+
+    /* ── TBH Timeline ─────────────────────────────────────────── */
+    .tbh-timeline {
+      margin-top: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .tbh-timeline h4 {
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-tbh);
+      margin-bottom: 1.2rem;
+    }
+
+    .timeline-track {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+    }
+
+    .timeline-track::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--border);
+      z-index: 0;
+    }
+
+    .timeline-node {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .timeline-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--accent-tbh);
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+
+    .timeline-node:hover .timeline-dot {
+      background: var(--accent-tbh);
+    }
+
+    .timeline-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--white);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 0.6rem;
+      text-align: center;
+    }
+
+    .timeline-date {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    /* ── Lightbox ─────────────────────────────────────────────── */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    #lightbox.open { display: flex; }
+
+    #lightbox img {
+      max-width: 100%;
+      max-height: 90vh;
+      border-radius: 8px;
+      box-shadow: 0 0 80px rgba(0,0,0,0.8);
+    }
+
+    #lightbox-close {
+      position: fixed;
+      top: 1.5rem;
+      right: 2rem;
+      font-size: 2rem;
+      color: #fff;
+      cursor: pointer;
+      line-height: 1;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    #lightbox-close:hover { opacity: 1; }
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 3rem 2rem;
+      max-width: var(--max);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: gap;
+      gap: 1.5rem;
+    }
+
+    .footer-name { font-weight: 700; color: var(--white); font-size: 1rem; }
+    .footer-copy { font-size: 0.8rem; color: var(--muted); }
+
+    .footer-links {
+      display: flex;
+      gap: 1.2rem;
+      list-style: none;
+    }
+
+    .footer-links a {
+      font-size: 0.85rem;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--white); }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .about-grid,
+      .tbh-layout { grid-template-columns: 1fr; }
+
+      .systems-grid { grid-template-columns: 1fr; }
+
+      .gallery-strip { grid-template-columns: repeat(3, 1fr); }
+
+      .team-grid { grid-template-columns: 1fr; }
+
+      nav .nav-links { gap: 1.2rem; }
+
+      footer { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Nav ───────────────────────────────────────────────────── -->
+  <nav>
+    <span class="nav-brand">Max Schenk</span>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#tog">Threads of God</a></li>
+      <li><a href="#tbh">The Broken Hero</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Hero ──────────────────────────────────────────────────── -->
+  <div class="hero">
+    <p class="hero-eyebrow">Game Designer &amp; Developer</p>
+    <h1>Max Schenk</h1>
+    <p class="hero-sub">
+      An innovative and technically skilled gameplay designer with a background
+      in chemical engineering — bridging analytical problem-solving with
+      narrative-driven combat design.
+    </p>
+    <div class="hero-links">
+      <a href="https://mbschenk1.wixsite.com/max-schenk-1" target="_blank" class="btn btn-primary">View Full Portfolio</a>
+      <a href="https://www.linkedin.com/in/max-schenk-gamedesign" target="_blank" class="btn btn-secondary">LinkedIn</a>
+      <a href="#tog" class="btn btn-secondary">See My Work</a>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── About ─────────────────────────────────────────────────── -->
+  <section id="about">
+    <p class="section-label">Background</p>
+    <h2 class="section-title">About Me</h2>
+    <div class="about-grid">
+      <div class="about-text">
+        <p>
+          I'm a gameplay designer focused on technical combat systems, narrative
+          experience design, and the intersection between player expression and
+          mechanical depth. My work spans solo personal projects and collaborative
+          team productions.
+        </p>
+        <p>
+          My background in chemical engineering gives me a systems-thinking
+          lens — I approach game design the same way I'd approach a reaction
+          network: isolate variables, iterate on parameters, and let emergent
+          complexity arise from simple, well-defined rules.
+        </p>
+        <p>
+          I build primarily in Unreal Engine, leveraging modular, spreadsheet-
+          integrated systems for rapid iteration. My design philosophy centers
+          on momentum, adaptability, and thematic grounding.
+        </p>
+        <div class="skills-list">
+          <span class="skill-tag">Unreal Engine 5</span>
+          <span class="skill-tag">Unity</span>
+          <span class="skill-tag">C#</span>
+          <span class="skill-tag">Combat Systems</span>
+          <span class="skill-tag">Blueprint Scripting</span>
+          <span class="skill-tag">Behavior Trees</span>
+          <span class="skill-tag">Combo Design</span>
+          <span class="skill-tag">Narrative Design</span>
+          <span class="skill-tag">Level Design</span>
+          <span class="skill-tag">VFX Integration</span>
+          <span class="skill-tag">C++ (UE)</span>
+        </div>
+      </div>
+      <div class="about-info">
+        <div class="info-card">
+          <h4>Education</h4>
+          <p>Chemical Engineering — UC Davis<br/>Game Design — VFS (Vancouver Film School)</p>
+        </div>
+        <div class="info-card">
+          <h4>Focus Areas</h4>
+          <p>Technical Combat Design &bull; Boss Encounter Systems &bull; Player-Expressive Mechanics &bull; Third-Person Action</p>
+        </div>
+        <div class="info-card">
+          <h4>Contact</h4>
+          <p>mbschenked@gmail.com<br/>+1 (650) 291-6240</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- PROJECT 1 — THREADS OF GOD                                -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section id="tog" class="project-section">
+    <div class="project-header">
+      <div>
+        <span class="project-badge badge-tog">Personal Project &mdash; 2025</span>
+        <h2 class="section-title">Threads of God<br/><span style="color:var(--muted);font-size:0.55em;font-weight:500;letter-spacing:0.02em;">Combat Demo</span></h2>
+        <p class="section-desc">
+          A third-person action combat demo built in Unreal Engine 5 — emphasizing
+          fast-paced precision swordplay, fluid movement, and visual storytelling
+          through a modular, data-driven combat architecture.
+        </p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.7rem;align-items:flex-end;flex-shrink:0;">
+        <span class="skill-tag">Unreal Engine 5</span>
+        <span class="skill-tag">Solo Developer</span>
+        <span class="skill-tag">Combat Systems</span>
+        <span class="skill-tag">Combat Puzzles</span>
+      </div>
+    </div>
+
+    <!-- Main showcase image -->
+    <div class="gallery-hero" onclick="openLightbox(this.querySelector('img').src)">
+      <img src="PortfolioPieces/ThreadsOfGod/Arelius Launch Attack.png" alt="Threads of God — Boss leaping with fiery sword" />
+    </div>
+
+    <!-- Thumbnail strip -->
+    <div class="gallery-strip">
+      <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img').src)">
+        <img src="PortfolioPieces/ThreadsOfGod/HighresScreenshot00000.png" alt="White light trail attack" />
+      </div>
+      <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img').src)">
+        <img src="PortfolioPieces/ThreadsOfGod/HighresScreenshot00004.png" alt="Blue lightning close-quarters combat" />
+      </div>
+      <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img').src)">
+        <img src="PortfolioPieces/ThreadsOfGod/AreliusCircleAttack1.png" alt="Circle AOE ring attack" />
+      </div>
+      <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img').src)">
+        <img src="PortfolioPieces/ThreadsOfGod/AreliusGroundSlash.png" alt="Ground slash barrier" />
+      </div>
+      <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img').src)">
+        <img src="PortfolioPieces/ThreadsOfGod/Arelius Pose Attack.png" alt="Combat showcase at sunset" />
+      </div>
+    </div>
+
+    <!-- Additional screenshots row -->
+    <div class="gallery-strip" style="grid-template-columns: repeat(3,1fr); margin-bottom:2.5rem;">
+      <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img').src)">
+        <img src="PortfolioPieces/ThreadsOfGod/AreliusCircleAttack2.png" alt="Circle attack variant 2" />
+      </div>
+      <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img').src)">
+        <img src="PortfolioPieces/ThreadsOfGod/HighresScreenshot00001.png" alt="Sword duel overhead strike" />
+      </div>
+      <div class="gallery-thumb" onclick="openLightbox(this.querySelector('img').src)">
+        <img src="PortfolioPieces/ThreadsOfGod/AreliusWindUpAttack.jpg" alt="Wind-up attack" />
+      </div>
+    </div>
+
+    <!-- Design quote -->
+    <div class="tog-accent">
+      <p>
+        "Momentum, adaptability, and thematic grounding inform every boss encounter — dynamic
+        behavior trees and weighted action probability ensure no two fights feel the same."
+      </p>
+    </div>
+
+    <!-- Systems breakdown -->
+    <h3 style="font-size:1.15rem;font-weight:700;color:var(--white);margin-top:2.5rem;margin-bottom:0.3rem;">
+      Core Systems
+    </h3>
+    <p style="color:var(--muted);font-size:0.9rem;margin-bottom:0.5rem;">
+      Each system is modular and spreadsheet-integrated for streamlined iteration and scaling.
+    </p>
+
+    <div class="systems-grid">
+      <div class="system-card">
+        <div class="system-icon">&#9889;</div>
+        <h4>Combo System</h4>
+        <p>Chained light and heavy attack sequences with movement-adaptive inputs and weapon-specific behaviour trees. Designed for expressive chaining without sacrificing readability.</p>
+      </div>
+      <div class="system-card">
+        <div class="system-icon">&#128737;</div>
+        <h4>Deflection System</h4>
+        <p>Frame-precise deflection windows trigger QTE-driven counter sequences and finisher states. Rewards skilled play with spectacular visual payoff.</p>
+      </div>
+      <div class="system-card">
+        <div class="system-icon">&#128260;</div>
+        <h4>Stat &amp; State System</h4>
+        <p>Data-driven player attribute tables govern hit reactions, stagger thresholds, and stamina gating — all exposed to designers via spreadsheet for rapid tuning.</p>
+      </div>
+      <div class="system-card">
+        <div class="system-icon">&#127939;</div>
+        <h4>Locomotion System</h4>
+        <p>8-directional state machine (Locomotion2H) driven by speed, movement angle, and weapon stance. Covers idle turn-in-place, jog start/stop, guard strafe, aim locomotion, and multi-tier jump landings — all blended with orientation warping and procedural foot IK for seamless transitions.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- PROJECT 2 — THE BROKEN HERO                               -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section id="tbh" class="project-section">
+
+    <span class="project-badge badge-tbh">VFS Team Project &mdash; 2025</span>
+    <h2 class="section-title">The Broken Hero</h2>
+    <p class="section-desc">
+      A single-player 3D fixed-camera platformer about a Greek soldier reborn from an
+      ancient fresco — navigating a crumbling temple while switching between a physical
+      3D world and 2D fresco spaces that transform the player into an illustration.
+    </p>
+
+    <div class="tbh-layout">
+
+      <!-- Left — description & role -->
+      <div>
+        <p style="color:var(--text);margin-top:1rem;font-size:0.97rem;">
+          Players traverse upward through a collapsing temple, hunted by a mythic Minotaur.
+          Entering fresco artworks shifts gameplay from 3D exploration to side-scrolling 2D
+          platforming — a dual-world mechanic that transforms both the visual language and
+          the rules of movement.
+        </p>
+        <p style="color:var(--text);margin-top:1rem;font-size:0.97rem;">
+          As the player climbs, fragmented narrative elements surface — revealing the
+          protagonist's history and building toward a final escape at the temple summit.
+        </p>
+
+        <div class="tbh-role-block">
+          <h4>My Role — Programmer</h4>
+          <ul>
+            <li>Core gameplay programming in Unity</li>
+            <li>Player character mechanics and movement systems</li>
+            <li>World-switching logic between 3D and 2D fresco states</li>
+            <li>Built a state-driven Cinemachine camera system with custom blending between gameplay states</li>
+            <li>Authored CameraManager, CinemachineSwitcher, and CameraTransformChanger for runtime camera control</li>
+            <li>Framed and composed all major gameplay setpieces, choreographing camera angles and pacing to guide the player through cinematic moments</li>
+            <li>Collaborated with Level Designer, Artists, and Sound team</li>
+          </ul>
+        </div>
+
+        <div class="tbh-timeline">
+          <h4>Project Timeline</h4>
+          <div class="timeline-track">
+            <div class="timeline-node">
+              <div class="timeline-dot"></div>
+              <div class="timeline-label">Pre-Pro</div>
+              <div class="timeline-date">Nov 10<br/>– Dec 4</div>
+            </div>
+            <div class="timeline-node">
+              <div class="timeline-dot"></div>
+              <div class="timeline-label">M1</div>
+              <div class="timeline-date">Dec 5<br/>– Dec 29</div>
+            </div>
+            <div class="timeline-node">
+              <div class="timeline-dot"></div>
+              <div class="timeline-label">M2</div>
+              <div class="timeline-date">Dec 30<br/>– Jan 23</div>
+            </div>
+            <div class="timeline-node">
+              <div class="timeline-dot"></div>
+              <div class="timeline-label">M3</div>
+              <div class="timeline-date">Jan 24<br/>– Feb 17</div>
+            </div>
+            <div class="timeline-node">
+              <div class="timeline-dot"></div>
+              <div class="timeline-label">Alpha</div>
+              <div class="timeline-date">Feb 18<br/>– Mar 14</div>
+            </div>
+            <div class="timeline-node">
+              <div class="timeline-dot"></div>
+              <div class="timeline-label">Beta</div>
+              <div class="timeline-date">Mar 15<br/>– Apr 9</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:2rem;">
+          <a href="https://vfs-gdpg.itch.io/the-broken-hero" target="_blank" class="btn btn-primary" style="background:var(--accent-tbh);">
+            Play on itch.io
+          </a>
+        </div>
+      </div>
+
+      <!-- Right — visual card + team -->
+      <div>
+        <div class="tbh-visual">
+          <div style="position:relative;width:100%;aspect-ratio:16/9;">
+            <iframe
+              src="https://www.youtube.com/embed/flLRO251moE?start=1"
+              title="The Broken Hero — Gameplay Trailer"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+              style="position:absolute;inset:0;width:100%;height:100%;border-radius:var(--radius) var(--radius) 0 0;">
+            </iframe>
+          </div>
+          <div class="tbh-meta">
+            <div class="tbh-meta-item">Platform<span>Windows</span></div>
+            <div class="tbh-meta-item">Status<span>Released</span></div>
+            <div class="tbh-meta-item">Rating<span>5.0 / 5 &#9733;</span></div>
+            <div class="tbh-meta-item">Size<span>411 MB</span></div>
+          </div>
+        </div>
+
+        <h4 style="font-size:0.75rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-top:2rem;margin-bottom:0.8rem;">Development Team</h4>
+        <div class="team-grid">
+          <div class="team-member highlight">
+            <div class="name">Max Schenk</div>
+            <div class="role">Programmer</div>
+          </div>
+          <div class="team-member">
+            <div class="name">Rafael Cenato</div>
+            <div class="role">PM &bull; Programmer</div>
+          </div>
+          <div class="team-member">
+            <div class="name">Gustavo Duarte</div>
+            <div class="role">Programmer &bull; Lighting Artist</div>
+          </div>
+          <div class="team-member">
+            <div class="name">Lais Fujiyama</div>
+            <div class="role">Level Designer &bull; UI Artist</div>
+          </div>
+          <div class="team-member">
+            <div class="name">Luigi Patti</div>
+            <div class="role">Character Artist &bull; Level Artist</div>
+          </div>
+          <div class="team-member">
+            <div class="name">Luiza Arantes</div>
+            <div class="role">Environment &bull; VFX &bull; Tech Art</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ── Contact ────────────────────────────────────────────────── -->
+  <section id="contact">
+    <p class="section-label">Get In Touch</p>
+    <h2 class="section-title">Contact</h2>
+    <p class="section-desc" style="margin-bottom:2rem;">
+      Open to game design roles, collaborations, and feedback on my work.
+    </p>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+      <a href="mailto:mbschenked@gmail.com" class="btn btn-primary">mbschenked@gmail.com</a>
+      <a href="https://www.linkedin.com/in/max-schenk-gamedesign" target="_blank" class="btn btn-secondary">LinkedIn</a>
+      <a href="https://mbschenk1.wixsite.com/max-schenk-1" target="_blank" class="btn btn-secondary">Wix Portfolio</a>
+    </div>
+  </section>
+
+  <!-- ── Footer ─────────────────────────────────────────────────── -->
+  <footer>
+    <div>
+      <div class="footer-name">Max Schenk</div>
+      <div class="footer-copy">Game Designer &mdash; 2025</div>
+    </div>
+    <ul class="footer-links">
+      <li><a href="#tog">Threads of God</a></li>
+      <li><a href="#tbh">The Broken Hero</a></li>
+      <li><a href="https://vfs-gdpg.itch.io/the-broken-hero" target="_blank">itch.io</a></li>
+      <li><a href="https://www.linkedin.com/in/max-schenk-gamedesign" target="_blank">LinkedIn</a></li>
+    </ul>
+  </footer>
+
+  <!-- ── Lightbox ───────────────────────────────────────────────── -->
+  <div id="lightbox">
+    <span id="lightbox-close" onclick="closeLightbox()">&times;</span>
+    <img id="lightbox-img" src="" alt="" />
+  </div>
+
+  <script>
+    function openLightbox(src) {
+      document.getElementById('lightbox-img').src = src;
+      document.getElementById('lightbox').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    document.getElementById('lightbox').addEventListener('click', function(e) {
+      if (e.target === this) closeLightbox();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeLightbox();
+    });
+  </script>
+
+</body>
+</html>
