@@ -374,6 +374,7 @@
       transition: border-color 0.2s;
     }
     .process-card:hover { border-color: rgba(74,143,255,0.3); }
+    .process-card.tbh:hover { border-color: rgba(201,136,58,0.3); }
 
     .process-num {
       font-size: 0.68rem;
@@ -383,6 +384,7 @@
       margin-bottom: 0.7rem;
       display: block;
     }
+    .process-num.tbh { color: var(--accent2); }
 
     .process-card h4 {
       font-size: 0.92rem;
@@ -969,6 +971,29 @@
       </div>
 
     </div>
+
+    <!-- Design Decisions -->
+    <h3 style="font-size:1.1rem;font-weight:700;color:var(--white);margin-top:3.5rem;margin-bottom:0.3rem;">Design Decisions</h3>
+    <p style="color:var(--muted);font-size:0.88rem;margin-bottom:0.2rem;">The thinking behind the systems — not just what was built, but why.</p>
+
+    <div class="process-bento">
+      <div class="process-card tbh">
+        <span class="process-num tbh">Decision 01</span>
+        <h4>Fixed Cinematic Cameras Over Free Camera</h4>
+        <p>The game uses pre-scripted Cinemachine positions rather than a player-controlled camera. Fixed cameras let the design control exactly what the player sees — framing puzzles as intended, pacing information delivery, and preventing players from accidentally revealing solutions by looking around freely.</p>
+      </div>
+      <div class="process-card tbh">
+        <span class="process-num tbh">Decision 02</span>
+        <h4>Action-Lock on Portal Transitions</h4>
+        <p>The 3D&#8596;2D dimension shift cannot be cancelled mid-animation. Making it interruptible would reduce it to a button press. The lock forces the player to experience the swap fully — the ink-spiral transition plays uninterrupted — reinforcing that they're crossing a real threshold, not toggling a filter.</p>
+      </div>
+      <div class="process-card tbh">
+        <span class="process-num tbh">Decision 03</span>
+        <h4>State-Driven Camera Architecture</h4>
+        <p>Rather than per-room camera logic, the CameraManager/CinemachineSwitcher/CameraTransformChanger system responds to gameplay state changes. Each state owns its camera configuration; the manager handles blending. This let level designers author new angles without touching code — critical when iterating fast in a 6-person team.</p>
+      </div>
+    </div>
+
   </section>
 
   <hr class="divider" />
