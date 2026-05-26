@@ -912,6 +912,131 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   margin-top: 0.4rem;
 }
 
+/* Numbered eyebrow row — "01  Project Overview  //ProjectName"
+   Sits above the bigtitle on header-type sections. Numbered chip uses
+   the project accent so it threads with the rest of the page colorway. */
+.sec-header__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 0.1rem;
+}
+.sec-header__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.7rem;
+  height: 1.7rem;
+  padding: 0 0.35rem;
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+}
+[data-accent="tbh"] .sec-header__num {
+  border-color: var(--tbh);
+  color: var(--tbh);
+}
+.sec-header__sec-label {
+  color: var(--white);
+  font-weight: 500;
+}
+.sec-header__sec-subtitle {
+  color: var(--amber);
+  font-weight: 400;
+  letter-spacing: 0.1em;
+}
+[data-accent="tbh"] .sec-header__sec-subtitle { color: var(--tbh); }
+
+/* Title row — title+subtitle on the left, autoplaying clip on the right.
+   Only activated when section data ships a titleVideo field; falls back to a
+   single column at narrow viewports so the video drops below the title. */
+.sec-header__title-row.has-video {
+  display: grid;
+  grid-template-columns: 1fr clamp(280px, 32vw, 460px);
+  gap: 2rem;
+  align-items: end;
+}
+.sec-header__title-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.sec-header__title-video {
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #000;
+  align-self: end;
+}
+.sec-header__title-video video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.sec-header__title-video iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+}
+@media (max-width: 700px) {
+  .sec-header__title-row.has-video {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .sec-header__title-video { max-width: 460px; }
+}
+
+/* Two-column overview body — left=high-concept summary, right=design focuses.
+   Falls back to single column at the mobile breakpoint. Inline <strong> is
+   the scannability hook for both columns. */
+.sec-header__overview {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  gap: 2rem;
+  margin-top: 0.6rem;
+  padding-top: 1.3rem;
+  border-top: 1px solid var(--border);
+}
+.sec-header__overview-divider {
+  width: 1px;
+  background: linear-gradient(180deg, transparent 4%, var(--amber) 50%, transparent 96%);
+  opacity: 0.4;
+}
+[data-accent="tbh"] .sec-header__overview-divider {
+  background: linear-gradient(180deg, transparent 4%, var(--tbh) 50%, transparent 96%);
+}
+.sec-header__overview-col {
+  max-width: none;
+  font-size: 0.96rem;
+  line-height: 1.7;
+}
+.sec-header__overview-col p {
+  margin: 0 0 0.75rem;
+}
+.sec-header__overview-col p:last-child { margin-bottom: 0; }
+.sec-header__overview-col strong {
+  color: var(--white);
+  font-weight: 600;
+}
+@media (max-width: 700px) {
+  .sec-header__overview {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding-top: 1rem;
+  }
+  .sec-header__overview-divider { display: none; }
+}
+
 /* ── Media section ───────────────────────────────────────────────────────── */
 .sec-media__frame {
   margin: 0;
@@ -1426,7 +1551,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--cyan);
-  margin: 1.5rem 0 0.2rem;
+  margin: 0 0 0.2rem;
 }
 .lc-tree-subheader {
   text-align: center;

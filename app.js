@@ -327,6 +327,17 @@
     var s = sectionShell(sec);
     var wrap = el('div', { class: 'sec-header' });
 
+    // Numbered eyebrow row — "01  Project Overview  //ProjectName".
+    // Mirrors the maxgiddens.com section-header pattern; visually distinct
+    // from the bigtitle below it so the section reads as "section 01" first.
+    var eyebrow = el('div', { class: 'sec-header__eyebrow' });
+    eyebrow.appendChild(el('span', { class: 'sec-header__num' }, '01'));
+    eyebrow.appendChild(el('span', { class: 'sec-header__sec-label' }, sec.label || 'Project Overview'));
+    if (project && project.title) {
+      eyebrow.appendChild(el('span', { class: 'sec-header__sec-subtitle' }, '//' + project.title));
+    }
+    wrap.appendChild(eyebrow);
+
     if (sec.badges && sec.badges.length) {
       var brow = el('div', { class: 'sec-header__badges' });
       sec.badges.forEach(function (b) {
@@ -338,20 +349,76 @@
     }
 
     // v2 fields: title + subtitle + lead. v1 fallback: bigTitle + body.
+    // When sec.titleVideo is present, lay title+subtitle in a 2-col flex row
+    // with a looping muted clip pinned to the right of the title block.
     var titleText = sec.title || sec.bigTitle || (project && project.title) || '';
-    if (titleText) {
-      var titleHtml = String(titleText).replace(/\s*\/\s*/, '<br/>');
-      var titleId = sec.id + '-title';
-      s.setAttribute('aria-labelledby', titleId);
-      wrap.appendChild(el('div', { id: titleId, class: 'sec-header__bigtitle', html: titleHtml }));
+    var titleHtml = titleText ? String(titleText).replace(/\s*\/\s*/, '<br/>') : '';
+    var titleId = sec.id + '-title';
+    if (titleText) s.setAttribute('aria-labelledby', titleId);
+
+    if (sec.titleVideo && (sec.titleVideo.src || sec.titleVideo.youtubeId)) {
+      var titleRow = el('div', { class: 'sec-header__title-row has-video' });
+      var titleCol = el('div', { class: 'sec-header__title-col' });
+      if (titleText) titleCol.appendChild(el('div', { id: titleId, class: 'sec-header__bigtitle', html: titleHtml }));
+      if (sec.subtitle) titleCol.appendChild(el('div', { class: 'sec-header__subtitle' }, sec.subtitle));
+      titleRow.appendChild(titleCol);
+
+      var videoWrap = el('div', { class: 'sec-header__title-video' });
+      if (sec.titleVideo.kind === 'youtube' && sec.titleVideo.youtubeId) {
+        // YouTube embed — autoplay + mute (required by autoplay policy) + loop
+        // (needs playlist=ID for single-video looping). modestbranding + rel=0 trim the chrome.
+        var ytSrc = 'https://www.youtube.com/embed/' + sec.titleVideo.youtubeId +
+                    '?autoplay=1&mute=1&loop=1&playlist=' + sec.titleVideo.youtubeId +
+                    '&modestbranding=1&rel=0';
+        if (sec.titleVideo.youtubeStart != null) ytSrc += '&start=' + encodeURIComponent(sec.titleVideo.youtubeStart);
+        var iframe = el('iframe', {
+          src: ytSrc,
+          title: sec.titleVideo.alt || (titleText + ' — embedded video'),
+          allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
+          allowfullscreen: true,
+          loading: 'lazy'
+        });
+        iframe.setAttribute('allowfullscreen', '');
+        videoWrap.appendChild(iframe);
+      } else {
+        var titleVid = el('video', {
+          autoplay: true, loop: true, muted: true, playsinline: true,
+          preload: 'metadata',
+          poster: sec.titleVideo.poster || null,
+          'aria-label': sec.titleVideo.alt || (titleText + ' — clip, looping, muted')
+        });
+        titleVid.setAttribute('muted', '');
+        titleVid.setAttribute('playsinline', '');
+        titleVid.appendChild(el('source', { src: sec.titleVideo.src, type: 'video/mp4' }));
+        videoWrap.appendChild(titleVid);
+      }
+      titleRow.appendChild(videoWrap);
+      wrap.appendChild(titleRow);
+    } else {
+      if (titleText) wrap.appendChild(el('div', { id: titleId, class: 'sec-header__bigtitle', html: titleHtml }));
+      if (sec.subtitle) wrap.appendChild(el('div', { class: 'sec-header__subtitle' }, sec.subtitle));
     }
-    if (sec.subtitle) wrap.appendChild(el('div', { class: 'sec-header__subtitle' }, sec.subtitle));
 
     var leadHtml = sec.lead != null ? sec.lead : sec.body;
-    if (leadHtml) {
-      var leadEl = el('div', { class: 'sec-header__body section-prose' });
-      leadEl.innerHTML = Array.isArray(leadHtml) ? leadHtml.map(function (p) { return '<p>' + p + '</p>'; }).join('') : leadHtml;
-      wrap.appendChild(leadEl);
+    var leadString = Array.isArray(leadHtml)
+      ? leadHtml.map(function (p) { return '<p>' + p + '</p>'; }).join('')
+      : leadHtml;
+
+    if (leadString && sec.focuses) {
+      // Two-column overview body: left = high-concept summary, right = design focuses.
+      var overview = el('div', { class: 'sec-header__overview' });
+      overview.appendChild(el('div', {
+        class: 'sec-header__overview-col sec-header__overview-col--lead section-prose',
+        html: leadString
+      }));
+      overview.appendChild(el('div', { class: 'sec-header__overview-divider', 'aria-hidden': 'true' }));
+      overview.appendChild(el('div', {
+        class: 'sec-header__overview-col sec-header__overview-col--focuses section-prose',
+        html: sec.focuses
+      }));
+      wrap.appendChild(overview);
+    } else if (leadString) {
+      wrap.appendChild(el('div', { class: 'sec-header__body section-prose', html: leadString }));
     }
 
     // meta: accepts array (v1) or object (v2 — Phase C may emit { role, engine, timeframe })
