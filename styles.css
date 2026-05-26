@@ -183,7 +183,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   position: sticky;
   top: var(--header-h);
   align-self: start;
-  max-height: calc(100vh - var(--header-h));
+  /* Force full viewport coverage when sticky-pinned — prevents page background
+     from showing below the sidebar's slab when content is shorter than the
+     viewport. Internal overflow-y: auto handles taller content. */
+  height: calc(100vh - var(--header-h));
   overflow-y: auto;
   padding: 2rem 1.6rem 2.5rem;
   border-right: 1px solid var(--border);
@@ -776,7 +779,16 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   max-width: 70ch;
 }
 .section-prose p + p { margin-top: 1rem; }
-.section-prose strong { color: var(--text-bright); font-weight: 600; }
+/* Inline <strong> highlights in body prose. Warm-gold tint reads as
+   highlighted vs body text without competing with the louder bullet-lead
+   anchors (amber-bright at 700 weight). Accent-aware via [data-accent]. */
+.section-prose strong {
+  color: color-mix(in srgb, var(--amber-bright) 50%, var(--white) 50%);
+  font-weight: 600;
+}
+[data-accent="tbh"] .section-prose strong {
+  color: color-mix(in srgb, var(--tbh) 50%, var(--white) 50%);
+}
 .section-prose em { color: var(--text-bright); font-style: italic; }
 .section-prose a { color: var(--cyan); border-bottom: 1px dotted rgba(46,184,204,0.4); }
 .section-prose a:hover { color: var(--white); border-bottom-color: var(--white); }
@@ -1125,8 +1137,11 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .sec-header__overview-col p:last-child { margin-bottom: 0; }
 .sec-header__overview-col strong {
-  color: var(--white);
+  color: color-mix(in srgb, var(--amber-bright) 50%, var(--white) 50%);
   font-weight: 600;
+}
+[data-accent="tbh"] .sec-header__overview-col strong {
+  color: color-mix(in srgb, var(--tbh) 50%, var(--white) 50%);
 }
 @media (max-width: 700px) {
   .sec-header__overview {
@@ -1136,6 +1151,40 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   }
   .sec-header__overview-divider { display: none; }
 }
+
+/* Inline Key Takeaways list in the overview left column. Visual treatment
+   mirrors .side__takeaways but sized for the body context. Triggered when
+   the header section sets takeawaysInline:true. */
+/* Reset the sidebar-row top margin when used inside the overview right column
+   — the column itself already starts at the grid's top edge. */
+.sec-header__overview-col--takeaways .side__block-row { margin-top: 0; }
+.overview-takeaways {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.overview-takeaways li {
+  font-size: 0.94rem;
+  line-height: 1.6;
+  color: var(--text);
+  padding-left: 1.1rem;
+  position: relative;
+}
+.overview-takeaways li::before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  top: 0.05em;
+  color: var(--amber-bright);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+[data-accent="tbh"] .overview-takeaways li::before { color: var(--tbh); }
+.overview-takeaways .bullet-lead { color: var(--amber-bright); font-weight: 700; }
+[data-accent="tbh"] .overview-takeaways .bullet-lead { color: var(--tbh); }
 
 /* ── Media section ───────────────────────────────────────────────────────── */
 .sec-media__frame {
@@ -1175,6 +1224,23 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 
 /* ── Gallery section ─────────────────────────────────────────────────────── */
+.sec-gallery__featured {
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #000;
+  margin-bottom: 1.2rem;
+}
+.sec-gallery__featured iframe,
+.sec-gallery__featured video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+  object-fit: cover;
+}
+
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

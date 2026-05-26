@@ -328,11 +328,10 @@
     var s = sectionShell(sec);
     var wrap = el('div', { class: 'sec-header' });
 
-    // Numbered eyebrow row — "01  Project Overview  //ProjectName".
-    // Mirrors the maxgiddens.com section-header pattern; visually distinct
-    // from the bigtitle below it so the section reads as "section 01" first.
+    // Eyebrow row — "Project Overview  //ProjectName". Mirrors the
+    // maxgiddens.com section-header pattern (numeric chip removed per
+    // Max 2026-05-26 — read as "Project Overview" not "section 01").
     var eyebrow = el('div', { class: 'sec-header__eyebrow' });
-    eyebrow.appendChild(el('span', { class: 'sec-header__num' }, '01'));
     eyebrow.appendChild(el('span', { class: 'sec-header__sec-label' }, sec.label || 'Project Overview'));
     if (project && project.title) {
       eyebrow.appendChild(el('span', { class: 'sec-header__sec-subtitle' }, '//' + project.title));
@@ -405,7 +404,26 @@
       ? leadHtml.map(function (p) { return '<p>' + p + '</p>'; }).join('')
       : leadHtml;
 
-    if (leadString && sec.focuses) {
+    if (leadString && sec.takeawaysInline && project && project.takeaways && project.takeaways.length) {
+      // Two-column overview body: left = high-concept summary (lead), right =
+      // Key Takeaways anchor list with sidebar-style header + glyph. Replaces the
+      // focuses prose for projects where takeaway bullets carry the scannability
+      // role better than a narrative right column. Sidebar suppresses its own
+      // Key Takeaways block when this flag is on to avoid duplication.
+      var overviewTa = el('div', { class: 'sec-header__overview' });
+      overviewTa.appendChild(el('div', {
+        class: 'sec-header__overview-col sec-header__overview-col--lead section-prose',
+        html: leadString
+      }));
+      overviewTa.appendChild(el('div', { class: 'sec-header__overview-divider', 'aria-hidden': 'true' }));
+      var taRight = el('div', { class: 'sec-header__overview-col sec-header__overview-col--takeaways' });
+      taRight.appendChild(blockLabelRow('Key Takeaways'));
+      var taUl = el('ul', { class: 'overview-takeaways' });
+      project.takeaways.forEach(function (t) { taUl.appendChild(el('li', { html: t })); });
+      taRight.appendChild(taUl);
+      overviewTa.appendChild(taRight);
+      wrap.appendChild(overviewTa);
+    } else if (leadString && sec.focuses) {
       // Two-column overview body: left = high-concept summary, right = design focuses.
       var overview = el('div', { class: 'sec-header__overview' });
       overview.appendChild(el('div', {
@@ -445,6 +463,61 @@
       wrap.appendChild(ctaRow);
     }
 
+    // Featured video — full-width visual evidence below the text block.
+    // Mirrors the gallery section's featuredVideo block so the overview can
+    // absorb a screenshots-section's worth of media without a separate section.
+    if (sec.featuredVideo && (sec.featuredVideo.src || sec.featuredVideo.youtubeId)) {
+      var hFeat = el('div', { class: 'sec-gallery__featured' });
+      if (sec.featuredVideo.kind === 'youtube' && sec.featuredVideo.youtubeId) {
+        var hYtSrc = 'https://www.youtube.com/embed/' + sec.featuredVideo.youtubeId +
+                     '?autoplay=1&mute=1&loop=1&playlist=' + sec.featuredVideo.youtubeId +
+                     '&modestbranding=1&rel=0';
+        if (sec.featuredVideo.youtubeStart != null) hYtSrc += '&start=' + encodeURIComponent(sec.featuredVideo.youtubeStart);
+        var hIframe = el('iframe', {
+          src: hYtSrc,
+          title: sec.featuredVideo.alt || (titleText + ' — embedded video'),
+          allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
+          allowfullscreen: true,
+          loading: 'lazy'
+        });
+        hIframe.setAttribute('allowfullscreen', '');
+        hFeat.appendChild(hIframe);
+      } else {
+        var hVid = el('video', {
+          autoplay: true, loop: true, muted: true, playsinline: true,
+          controls: true,
+          preload: 'metadata',
+          poster: sec.featuredVideo.poster || null,
+          'aria-label': sec.featuredVideo.alt || (titleText + ' — featured clip')
+        });
+        hVid.setAttribute('muted', '');
+        hVid.setAttribute('playsinline', '');
+        hVid.appendChild(el('source', { src: sec.featuredVideo.src, type: 'video/mp4' }));
+        hFeat.appendChild(hVid);
+      }
+      wrap.appendChild(hFeat);
+    }
+
+    // Embedded gallery — same lightbox handler as renderSecGallery, dropped
+    // into the overview so the screenshots section can be retired.
+    if (sec.images && sec.images.length) {
+      var hGrid = el('div', { class: 'gallery-grid' });
+      var hImageList = sec.images.map(function (img) {
+        return { src: img.src, alt: img.alt || '' };
+      });
+      hImageList.forEach(function (img, i) {
+        var thumb = el('button', {
+          type: 'button',
+          class: 'gallery-thumb',
+          'aria-label': 'Open ' + (img.alt || 'image') + ' in lightbox'
+        });
+        thumb.appendChild(el('img', { src: img.src, alt: img.alt, loading: 'lazy' }));
+        thumb.addEventListener('click', function () { openLightbox(img.src, hImageList, i); });
+        hGrid.appendChild(thumb);
+      });
+      wrap.appendChild(hGrid);
+    }
+
     s.appendChild(wrap);
     return s;
   }
@@ -462,6 +535,38 @@
       var intro = el('div', { class: 'sec-gallery__intro section-prose' });
       intro.innerHTML = sec.body;
       s.appendChild(intro);
+    }
+
+    if (sec.featuredVideo && (sec.featuredVideo.src || sec.featuredVideo.youtubeId)) {
+      var feat = el('div', { class: 'sec-gallery__featured' });
+      if (sec.featuredVideo.kind === 'youtube' && sec.featuredVideo.youtubeId) {
+        var ytFeatSrc = 'https://www.youtube.com/embed/' + sec.featuredVideo.youtubeId +
+                        '?autoplay=1&mute=1&loop=1&playlist=' + sec.featuredVideo.youtubeId +
+                        '&modestbranding=1&rel=0';
+        if (sec.featuredVideo.youtubeStart != null) ytFeatSrc += '&start=' + encodeURIComponent(sec.featuredVideo.youtubeStart);
+        var ytFeat = el('iframe', {
+          src: ytFeatSrc,
+          title: sec.featuredVideo.alt || (sec.title || 'Featured video'),
+          allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
+          allowfullscreen: true,
+          loading: 'lazy'
+        });
+        ytFeat.setAttribute('allowfullscreen', '');
+        feat.appendChild(ytFeat);
+      } else {
+        var featVid = el('video', {
+          autoplay: true, loop: true, muted: true, playsinline: true,
+          controls: true,
+          preload: 'metadata',
+          poster: sec.featuredVideo.poster || null,
+          'aria-label': sec.featuredVideo.alt || (sec.title || 'Featured clip')
+        });
+        featVid.setAttribute('muted', '');
+        featVid.setAttribute('playsinline', '');
+        featVid.appendChild(el('source', { src: sec.featuredVideo.src, type: 'video/mp4' }));
+        feat.appendChild(featVid);
+      }
+      s.appendChild(feat);
     }
 
     var grid = el('div', { class: 'gallery-grid' });
@@ -895,8 +1000,13 @@
       }
     }
 
+    // Suppress sidebar Key Takeaways when the Project Overview header is
+    // rendering them inline (takeawaysInline flag) — avoids duplication.
+    var inlineTa = (p.sections || []).some(function (s) {
+      return s.type === 'header' && s.takeawaysInline;
+    });
     var takeaways = p.takeaways || p.efforts;
-    if (takeaways && takeaways.length) {
+    if (takeaways && takeaways.length && !inlineTa) {
       sidebarMount.appendChild(blockLabelRow('Key Takeaways'));
       var taList = el('ul', { class: 'side__takeaways' });
       // html: t lets bullet strings include inline markup (e.g. <span class="bullet-lead">…</span>)

@@ -34,28 +34,15 @@ window.PROJECTS.tog = {
       badges: ['Personal Project — 2025', 'Solo Developer'],
       title: 'Threads / of God',
       subtitle: '// Combat Demo · Unreal Engine 5',
-      titleVideo: {
+      lead:
+        '<p>Threads of God is a <strong>third-person melee combat demo</strong> developed in UE5, where players face a <strong>boss that adapts to their playstyles weaknesses</strong>, creating split-second tactical swordplay and momentum-driven exchanges. ' +
+        'As the solo developer, I designed the boss\'s <strong>combat puzzles, combat pacing, and adaptive AI</strong>, built the modular combat systems the demo runs on, and <strong>tuned player abilities against boss behaviors</strong> so each pair matched in difficulty and thematic intent.</p>',
+      takeawaysInline: true,
+      featuredVideo: {
         kind: 'youtube',
         youtubeId: 'Cu8Jblk0IRo',
         alt: 'Threads of God — full demo encounter against Arelius'
       },
-      lead:
-        '<p>A <strong>solo-built third-person combat demo in UE5</strong>. ' +
-        'Every boss action is a layered <strong>puzzle — forcing position, timing, and mechanic choice simultaneously</strong> ' +
-        'to create an opening the player has to earn.</p>',
-      focuses:
-        '<p>The work centered on <strong>designing every boss action as a layered combat puzzle</strong> — players solving position, timing, and mechanic together to earn an opening. ' +
-        'As solo developer I built the <strong>adaptive enemy AI, contested-momentum pacing, and modular core systems</strong> the demo runs on.</p>',
-      meta: ['Combat Designer', 'Unreal Engine 5', 'Solo Developer', 'Blueprint + C++', 'Boss Encounter Design']
-    },
-
-    // ── § 2 ─ Screenshots ──────────────────────────────────────────────────
-    {
-      id: 'screenshots',
-      label: 'Screenshots',
-      type: 'gallery',
-      title: 'Screenshots',
-      body: '<p>In-engine captures from the demo encounter against Arelius.</p>',
       images: [
         { src: './PortfolioPieces/ThreadsOfGod/HighresScreenshot00000.jpg', alt: 'White light trail attack' },
         { src: './PortfolioPieces/ThreadsOfGod/AreliusCircleAttack1.jpg', alt: 'Circle AOE attack' },
@@ -68,7 +55,7 @@ window.PROJECTS.tog = {
       ]
     },
 
-    // ── § 3 ─ Attacks as a Combat Puzzle ──────────────────────────────────
+    // ── § 2 ─ Attacks as a Combat Puzzle ──────────────────────────────────
     {
       id: 'combat-puzzle',
       label: 'Attacks as a Combat Puzzle',
@@ -87,12 +74,12 @@ window.PROJECTS.tog = {
           type: 'subsection',
           title: 'Attack Design',
           body:
-            '<p class="dm-lead">Attacks are designed not only to challenge player mastery, but to <strong>influence player behavior into different moment to moment gameplay</strong>.</p>' +
+            '<p class="dm-lead">Attacks are designed not only to <strong>challenge player mastery</strong>, but to <strong>influence player behavior</strong> into different moment to moment gameplay.</p>' +
             '<ul class="dm-bullets">' +
               '<li><span class="bullet-lead">Branching Behavior:</span> Combos are built from <strong>modular attack sequences that branch based on player behavior</strong>, allowing the player to take advantage of boss responses.</li>' +
               '<li><span class="bullet-lead">Combo Themes:</span> Each combo has a <strong>distinct movement, timing, and attack identity</strong>. Variations in rhythm, trajectory, spacing, and delays improve readability while maintaining combat variety.</li>' +
-              '<li><span class="bullet-lead">Telegraph Windows:</span> Longer combo structures contain <strong>intentional telegraph, recovery, and transition windows</strong>, giving players time to recognize boss actions and prepare a response.</li>' +
-              '<li><span class="bullet-lead">Weakness Variance:</span> Some combos create <strong>large punish opportunities</strong>, while others <strong>sustain prolonged pressure with many small opportunities to interrupt</strong>.</li>' +
+              '<li><span class="bullet-lead">Telegraph Windows:</span> Longer combo structures contain <strong>intentional telegraph, recovery, and transition windows</strong>, giving <strong>players time</strong> to recognize boss actions and <strong>prepare a response</strong>.</li>' +
+              '<li><span class="bullet-lead">Weakness Variance:</span> Some enemy combos create <strong>large punish opportunities</strong>, while others <strong>sustain prolonged pressure with many small opportunities to interrupt</strong>.</li>' +
             '</ul>',
           media: [
             {
@@ -177,7 +164,7 @@ window.PROJECTS.tog = {
       ]
     },
 
-    // ── § 4 ─ Regulating Fight Pacing ─────────────────────────────────────
+    // ── § 3 ─ Regulating Fight Pacing ─────────────────────────────────────
     {
       id: 'fight-pacing',
       label: 'Regulating Fight Pacing',
@@ -258,7 +245,7 @@ window.PROJECTS.tog = {
       ]
     },
 
-    // ── § 5 ─ Adaptive Enemy AI Design ───────────────────────────────────────────
+    // ── § 4 ─ Adaptive Enemy AI Design ───────────────────────────────────────────
     {
       id: 'adaptive-enemy-ai-design',
       label: 'Adaptive Enemy AI Design',
@@ -405,7 +392,7 @@ window.PROJECTS.tog = {
       ]
     },
 
-    // ── § 6 ─ Core Systems ─────────────────────────────────────────────────
+    // ── § 5 ─ Core Systems ─────────────────────────────────────────────────
     {
       id: 'core-systems',
       label: 'Core Systems',
@@ -442,7 +429,7 @@ window.PROJECTS.tog = {
       ]
     },
 
-    // ── § 7 ─ Boss AI — Arelius ────────────────────────────────────────────
+    // ── § 6 ─ Boss AI — Arelius ────────────────────────────────────────────
     // NOTE: Boss AI tag chips were buttons with onclick="openAIDoc('...')" in live site,
     // opening per-system documentation in a modal. Portfolio-0.2 v2 ports them as plain
     // <span> labels; the AI doc modal is deferred to a follow-on phase. 37 chips affected.
