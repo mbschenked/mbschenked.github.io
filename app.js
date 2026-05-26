@@ -323,6 +323,107 @@
     });
   }
 
+  // ── Shared render helpers (used by both header + gallery sections) ───────
+
+  // Returns a wrapper div containing either a YouTube iframe or an MP4 <video>.
+  // Used by renderSecHeader (titleVideo + featuredVideo) and renderSecGallery
+  // (featuredVideo). YouTube uses the playlist=ID single-video loop hack +
+  // modestbranding + rel=0. MP4 always autoplay/loop/muted/playsinline (browser
+  // autoplay policy requires muted); opts.mp4Controls toggles visible controls
+  // (decorative title clips off, featured screenshots-section clips on).
+  function buildVideoEmbed(spec, opts) {
+    var wrap = el('div', { class: opts.wrapperClass });
+    if (spec.kind === 'youtube' && spec.youtubeId) {
+      var ytSrc = 'https://www.youtube.com/embed/' + spec.youtubeId +
+                  '?autoplay=1&mute=1&loop=1&playlist=' + spec.youtubeId +
+                  '&modestbranding=1&rel=0';
+      if (spec.youtubeStart != null) ytSrc += '&start=' + encodeURIComponent(spec.youtubeStart);
+      var iframe = el('iframe', {
+        src: ytSrc,
+        title: spec.alt || opts.ytAlt,
+        allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
+        allowfullscreen: true,
+        loading: 'lazy'
+      });
+      iframe.setAttribute('allowfullscreen', '');
+      wrap.appendChild(iframe);
+    } else {
+      var vidAttrs = {
+        autoplay: true, loop: true, muted: true, playsinline: true,
+        preload: 'metadata',
+        poster: spec.poster || null,
+        'aria-label': spec.alt || opts.mp4Alt
+      };
+      if (opts.mp4Controls) vidAttrs.controls = true;
+      var vid = el('video', vidAttrs);
+      vid.setAttribute('muted', '');
+      vid.setAttribute('playsinline', '');
+      vid.appendChild(el('source', { src: spec.src, type: 'video/mp4' }));
+      wrap.appendChild(vid);
+    }
+    return wrap;
+  }
+
+  // Returns a .gallery-grid div with click-to-lightbox handlers. Image list is
+  // normalized once per call so the lightbox's prev/next navigation works
+  // across the same set. Always returns a grid (empty if no images), matching
+  // the pre-refactor renderSecGallery behavior.
+  function buildImageGallery(images) {
+    var grid = el('div', { class: 'gallery-grid' });
+    var list = (images || []).map(function (img) {
+      return { src: img.src, alt: img.alt || '' };
+    });
+    list.forEach(function (img, i) {
+      var thumb = el('button', {
+        type: 'button',
+        class: 'gallery-thumb',
+        'aria-label': 'Open ' + (img.alt || 'image') + ' in lightbox'
+      });
+      thumb.appendChild(el('img', { src: img.src, alt: img.alt, loading: 'lazy' }));
+      thumb.addEventListener('click', function () { openLightbox(img.src, list, i); });
+      grid.appendChild(thumb);
+    });
+    return grid;
+  }
+
+  // Overview body — three layout variants, in priority order:
+  //   1. takeawaysInline → lead LEFT + Key Takeaways RIGHT (sidebar-style glyph
+  //      header + project.takeaways list). Sidebar dedupes its own block when
+  //      this flag is on (see rebuildSidebar's takeaways branch).
+  //   2. focuses → lead LEFT + focuses prose RIGHT (Giddens-style default).
+  //   3. fallback → single-column lead.
+  function renderOverviewBody(sec, project, leadString) {
+    if (sec.takeawaysInline && project && project.takeaways && project.takeaways.length) {
+      var overviewTa = el('div', { class: 'sec-header__overview' });
+      overviewTa.appendChild(el('div', {
+        class: 'sec-header__overview-col sec-header__overview-col--lead section-prose',
+        html: leadString
+      }));
+      overviewTa.appendChild(el('div', { class: 'sec-header__overview-divider', 'aria-hidden': 'true' }));
+      var taRight = el('div', { class: 'sec-header__overview-col sec-header__overview-col--takeaways' });
+      taRight.appendChild(blockLabelRow('Key Takeaways'));
+      var taUl = el('ul', { class: 'overview-takeaways' });
+      project.takeaways.forEach(function (t) { taUl.appendChild(el('li', { html: t })); });
+      taRight.appendChild(taUl);
+      overviewTa.appendChild(taRight);
+      return overviewTa;
+    }
+    if (sec.focuses) {
+      var overview = el('div', { class: 'sec-header__overview' });
+      overview.appendChild(el('div', {
+        class: 'sec-header__overview-col sec-header__overview-col--lead section-prose',
+        html: leadString
+      }));
+      overview.appendChild(el('div', { class: 'sec-header__overview-divider', 'aria-hidden': 'true' }));
+      overview.appendChild(el('div', {
+        class: 'sec-header__overview-col sec-header__overview-col--focuses section-prose',
+        html: sec.focuses
+      }));
+      return overview;
+    }
+    return el('div', { class: 'sec-header__body section-prose', html: leadString });
+  }
+
   // ── Section: header (Project Overview lead) ──────────────────────────────
   function renderSecHeader(sec, project) {
     var s = sectionShell(sec);
@@ -362,37 +463,12 @@
       if (titleText) titleCol.appendChild(el('div', { id: titleId, class: 'sec-header__bigtitle', html: titleHtml }));
       if (sec.subtitle) titleCol.appendChild(el('div', { class: 'sec-header__subtitle' }, sec.subtitle));
       titleRow.appendChild(titleCol);
-
-      var videoWrap = el('div', { class: 'sec-header__title-video' });
-      if (sec.titleVideo.kind === 'youtube' && sec.titleVideo.youtubeId) {
-        // YouTube embed — autoplay + mute (required by autoplay policy) + loop
-        // (needs playlist=ID for single-video looping). modestbranding + rel=0 trim the chrome.
-        var ytSrc = 'https://www.youtube.com/embed/' + sec.titleVideo.youtubeId +
-                    '?autoplay=1&mute=1&loop=1&playlist=' + sec.titleVideo.youtubeId +
-                    '&modestbranding=1&rel=0';
-        if (sec.titleVideo.youtubeStart != null) ytSrc += '&start=' + encodeURIComponent(sec.titleVideo.youtubeStart);
-        var iframe = el('iframe', {
-          src: ytSrc,
-          title: sec.titleVideo.alt || (titleText + ' — embedded video'),
-          allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
-          allowfullscreen: true,
-          loading: 'lazy'
-        });
-        iframe.setAttribute('allowfullscreen', '');
-        videoWrap.appendChild(iframe);
-      } else {
-        var titleVid = el('video', {
-          autoplay: true, loop: true, muted: true, playsinline: true,
-          preload: 'metadata',
-          poster: sec.titleVideo.poster || null,
-          'aria-label': sec.titleVideo.alt || (titleText + ' — clip, looping, muted')
-        });
-        titleVid.setAttribute('muted', '');
-        titleVid.setAttribute('playsinline', '');
-        titleVid.appendChild(el('source', { src: sec.titleVideo.src, type: 'video/mp4' }));
-        videoWrap.appendChild(titleVid);
-      }
-      titleRow.appendChild(videoWrap);
+      titleRow.appendChild(buildVideoEmbed(sec.titleVideo, {
+        wrapperClass: 'sec-header__title-video',
+        mp4Controls: false,
+        ytAlt: titleText + ' — embedded video',
+        mp4Alt: titleText + ' — clip, looping, muted'
+      }));
       wrap.appendChild(titleRow);
     } else {
       if (titleText) wrap.appendChild(el('div', { id: titleId, class: 'sec-header__bigtitle', html: titleHtml }));
@@ -404,40 +480,8 @@
       ? leadHtml.map(function (p) { return '<p>' + p + '</p>'; }).join('')
       : leadHtml;
 
-    if (leadString && sec.takeawaysInline && project && project.takeaways && project.takeaways.length) {
-      // Two-column overview body: left = high-concept summary (lead), right =
-      // Key Takeaways anchor list with sidebar-style header + glyph. Replaces the
-      // focuses prose for projects where takeaway bullets carry the scannability
-      // role better than a narrative right column. Sidebar suppresses its own
-      // Key Takeaways block when this flag is on to avoid duplication.
-      var overviewTa = el('div', { class: 'sec-header__overview' });
-      overviewTa.appendChild(el('div', {
-        class: 'sec-header__overview-col sec-header__overview-col--lead section-prose',
-        html: leadString
-      }));
-      overviewTa.appendChild(el('div', { class: 'sec-header__overview-divider', 'aria-hidden': 'true' }));
-      var taRight = el('div', { class: 'sec-header__overview-col sec-header__overview-col--takeaways' });
-      taRight.appendChild(blockLabelRow('Key Takeaways'));
-      var taUl = el('ul', { class: 'overview-takeaways' });
-      project.takeaways.forEach(function (t) { taUl.appendChild(el('li', { html: t })); });
-      taRight.appendChild(taUl);
-      overviewTa.appendChild(taRight);
-      wrap.appendChild(overviewTa);
-    } else if (leadString && sec.focuses) {
-      // Two-column overview body: left = high-concept summary, right = design focuses.
-      var overview = el('div', { class: 'sec-header__overview' });
-      overview.appendChild(el('div', {
-        class: 'sec-header__overview-col sec-header__overview-col--lead section-prose',
-        html: leadString
-      }));
-      overview.appendChild(el('div', { class: 'sec-header__overview-divider', 'aria-hidden': 'true' }));
-      overview.appendChild(el('div', {
-        class: 'sec-header__overview-col sec-header__overview-col--focuses section-prose',
-        html: sec.focuses
-      }));
-      wrap.appendChild(overview);
-    } else if (leadString) {
-      wrap.appendChild(el('div', { class: 'sec-header__body section-prose', html: leadString }));
+    if (leadString) {
+      wrap.appendChild(renderOverviewBody(sec, project, leadString));
     }
 
     // meta: accepts array (v1) or object (v2 — Phase C may emit { role, engine, timeframe })
@@ -463,59 +507,17 @@
       wrap.appendChild(ctaRow);
     }
 
-    // Featured video — full-width visual evidence below the text block.
-    // Mirrors the gallery section's featuredVideo block so the overview can
-    // absorb a screenshots-section's worth of media without a separate section.
     if (sec.featuredVideo && (sec.featuredVideo.src || sec.featuredVideo.youtubeId)) {
-      var hFeat = el('div', { class: 'sec-gallery__featured' });
-      if (sec.featuredVideo.kind === 'youtube' && sec.featuredVideo.youtubeId) {
-        var hYtSrc = 'https://www.youtube.com/embed/' + sec.featuredVideo.youtubeId +
-                     '?autoplay=1&mute=1&loop=1&playlist=' + sec.featuredVideo.youtubeId +
-                     '&modestbranding=1&rel=0';
-        if (sec.featuredVideo.youtubeStart != null) hYtSrc += '&start=' + encodeURIComponent(sec.featuredVideo.youtubeStart);
-        var hIframe = el('iframe', {
-          src: hYtSrc,
-          title: sec.featuredVideo.alt || (titleText + ' — embedded video'),
-          allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
-          allowfullscreen: true,
-          loading: 'lazy'
-        });
-        hIframe.setAttribute('allowfullscreen', '');
-        hFeat.appendChild(hIframe);
-      } else {
-        var hVid = el('video', {
-          autoplay: true, loop: true, muted: true, playsinline: true,
-          controls: true,
-          preload: 'metadata',
-          poster: sec.featuredVideo.poster || null,
-          'aria-label': sec.featuredVideo.alt || (titleText + ' — featured clip')
-        });
-        hVid.setAttribute('muted', '');
-        hVid.setAttribute('playsinline', '');
-        hVid.appendChild(el('source', { src: sec.featuredVideo.src, type: 'video/mp4' }));
-        hFeat.appendChild(hVid);
-      }
-      wrap.appendChild(hFeat);
+      wrap.appendChild(buildVideoEmbed(sec.featuredVideo, {
+        wrapperClass: 'sec-gallery__featured',
+        mp4Controls: true,
+        ytAlt: titleText + ' — embedded video',
+        mp4Alt: titleText + ' — featured clip'
+      }));
     }
 
-    // Embedded gallery — same lightbox handler as renderSecGallery, dropped
-    // into the overview so the screenshots section can be retired.
     if (sec.images && sec.images.length) {
-      var hGrid = el('div', { class: 'gallery-grid' });
-      var hImageList = sec.images.map(function (img) {
-        return { src: img.src, alt: img.alt || '' };
-      });
-      hImageList.forEach(function (img, i) {
-        var thumb = el('button', {
-          type: 'button',
-          class: 'gallery-thumb',
-          'aria-label': 'Open ' + (img.alt || 'image') + ' in lightbox'
-        });
-        thumb.appendChild(el('img', { src: img.src, alt: img.alt, loading: 'lazy' }));
-        thumb.addEventListener('click', function () { openLightbox(img.src, hImageList, i); });
-        hGrid.appendChild(thumb);
-      });
-      wrap.appendChild(hGrid);
+      wrap.appendChild(buildImageGallery(sec.images));
     }
 
     s.appendChild(wrap);
@@ -538,52 +540,15 @@
     }
 
     if (sec.featuredVideo && (sec.featuredVideo.src || sec.featuredVideo.youtubeId)) {
-      var feat = el('div', { class: 'sec-gallery__featured' });
-      if (sec.featuredVideo.kind === 'youtube' && sec.featuredVideo.youtubeId) {
-        var ytFeatSrc = 'https://www.youtube.com/embed/' + sec.featuredVideo.youtubeId +
-                        '?autoplay=1&mute=1&loop=1&playlist=' + sec.featuredVideo.youtubeId +
-                        '&modestbranding=1&rel=0';
-        if (sec.featuredVideo.youtubeStart != null) ytFeatSrc += '&start=' + encodeURIComponent(sec.featuredVideo.youtubeStart);
-        var ytFeat = el('iframe', {
-          src: ytFeatSrc,
-          title: sec.featuredVideo.alt || (sec.title || 'Featured video'),
-          allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
-          allowfullscreen: true,
-          loading: 'lazy'
-        });
-        ytFeat.setAttribute('allowfullscreen', '');
-        feat.appendChild(ytFeat);
-      } else {
-        var featVid = el('video', {
-          autoplay: true, loop: true, muted: true, playsinline: true,
-          controls: true,
-          preload: 'metadata',
-          poster: sec.featuredVideo.poster || null,
-          'aria-label': sec.featuredVideo.alt || (sec.title || 'Featured clip')
-        });
-        featVid.setAttribute('muted', '');
-        featVid.setAttribute('playsinline', '');
-        featVid.appendChild(el('source', { src: sec.featuredVideo.src, type: 'video/mp4' }));
-        feat.appendChild(featVid);
-      }
-      s.appendChild(feat);
+      s.appendChild(buildVideoEmbed(sec.featuredVideo, {
+        wrapperClass: 'sec-gallery__featured',
+        mp4Controls: true,
+        ytAlt: sec.title || 'Featured video',
+        mp4Alt: sec.title || 'Featured clip'
+      }));
     }
 
-    var grid = el('div', { class: 'gallery-grid' });
-    var imageList = (sec.images || []).map(function (img) {
-      return { src: img.src, alt: img.alt || '' };
-    });
-    imageList.forEach(function (img, i) {
-      var thumb = el('button', {
-        type: 'button',
-        class: 'gallery-thumb',
-        'aria-label': 'Open ' + (img.alt || 'image') + ' in lightbox'
-      });
-      thumb.appendChild(el('img', { src: img.src, alt: img.alt, loading: 'lazy' }));
-      thumb.addEventListener('click', function () { openLightbox(img.src, imageList, i); });
-      grid.appendChild(thumb);
-    });
-    s.appendChild(grid);
+    s.appendChild(buildImageGallery(sec.images));
 
     // Optional captions row when supplied
     if (sec.images && sec.images.some(function (im) { return im.caption; })) {
