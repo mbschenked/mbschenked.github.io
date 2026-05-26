@@ -237,6 +237,7 @@
     var inner = el('div', { class: 'content__inner', 'data-accent': p.accent || 'amber' });
     inner.appendChild(renderProjectTiles(p.slug));   // tiles start at sidebar's Y; sections follow
     inner.appendChild(renderAllSections(p));
+    inner.appendChild(renderProjectOutro(p));
     var footer = renderProjectFooter(p.slug);
     if (footer) inner.appendChild(footer);
     contentMount.appendChild(inner);
@@ -771,6 +772,46 @@
     var gallery = (p.sections || []).find(function (s) { return s.type === 'gallery' && s.images && s.images.length; });
     if (gallery) return gallery.images[0].src;
     return null;
+  }
+
+  // ── Project outro — celebratory end-of-read CTA + contact + sign-off ─────
+  // Rendered after all sections, before the next-project footer. Shared
+  // content across both projects; accent color flows through via parent
+  // [data-accent] so amber/tbh both work without per-project data. Heading
+  // glow + spark twinkle only run once .visible is set by the fade-up
+  // observer, so the celebration triggers on scroll-into-view.
+  function renderProjectOutro(p) {
+    var primaryBtnCls = (p.accent === 'tbh') ? 'btn-tbh' : 'btn-amber';
+    var outro = el('section', { class: 'proj-outro fade-up', 'aria-label': 'End of project — contact' });
+
+    var headline = el('div', { class: 'proj-outro__headline' });
+    headline.appendChild(el('span', { class: 'proj-outro__spark', 'aria-hidden': 'true' }, '✦'));
+    headline.appendChild(el('h2', { class: 'proj-outro__title' }, 'You Made It To The End!'));
+    headline.appendChild(el('span', { class: 'proj-outro__spark', 'aria-hidden': 'true' }, '✦'));
+    outro.appendChild(headline);
+
+    var contact = el('div', { class: 'proj-outro__contact' });
+    contact.appendChild(el('a', {
+      href: 'mailto:mbschenked@gmail.com',
+      class: 'btn ' + primaryBtnCls
+    }, 'mbschenked@gmail.com'));
+    contact.appendChild(el('a', {
+      href: 'https://www.linkedin.com/in/max-schenk-gamedesign',
+      target: '_blank', rel: 'noopener noreferrer',
+      class: 'btn btn-ghost'
+    }, 'LinkedIn'));
+    contact.appendChild(el('a', {
+      href: 'https://vfs-gdpg.itch.io/the-broken-hero',
+      target: '_blank', rel: 'noopener noreferrer',
+      class: 'btn btn-ghost'
+    }, 'itch.io'));
+    outro.appendChild(contact);
+
+    outro.appendChild(el('p', {
+      class: 'proj-outro__signoff'
+    }, 'There is so much I was unable to include in this project breakdown — playtester changes, breakdowns of specific attacks, designing matching player abilities and movements to the boss\'s to make an interesting pairing, the theory behind it, and more. Contact me if you want to chat — I always want to talk about combat design and its theory!'));
+
+    return outro;
   }
 
   // ── Next-project footer ──────────────────────────────────────────────────
