@@ -34,13 +34,19 @@ window.PROJECTS.tog = {
       badges: ['Personal Project — 2025', 'Solo Developer'],
       title: 'Threads / of God',
       subtitle: '// Combat Demo · Unreal Engine 5',
+      titleVideo: {
+        kind: 'youtube',
+        youtubeId: 'Cu8Jblk0IRo',
+        alt: 'Threads of God — full demo encounter against Arelius'
+      },
       lead:
-        '<p>A solo-built third-person combat demo in UE5. Every boss attack is a layered ' +
-        'puzzle — forcing position, timing, and mechanic choice simultaneously to ' +
-        'create an opening the player has to earn. Built from scratch: player combat, ' +
-        'enemy AI, locomotion, and the architecture underneath all of it.</p>',
-      meta: ['Combat Designer', 'Unreal Engine 5', 'Solo Developer', 'Blueprint + C++', 'Boss Encounter Design'],
-      cta: { label: '▶  Watch Demo', href: 'https://www.youtube.com/watch?v=Cu8Jblk0IRo' }
+        '<p>A <strong>solo-built third-person combat demo in UE5</strong>. ' +
+        'Every boss action is a layered <strong>puzzle — forcing position, timing, and mechanic choice simultaneously</strong> ' +
+        'to create an opening the player has to earn.</p>',
+      focuses:
+        '<p>The work centered on <strong>designing every boss action as a layered combat puzzle</strong> — players solving position, timing, and mechanic together to earn an opening. ' +
+        'As solo developer I built the <strong>adaptive enemy AI, contested-momentum pacing, and modular core systems</strong> the demo runs on.</p>',
+      meta: ['Combat Designer', 'Unreal Engine 5', 'Solo Developer', 'Blueprint + C++', 'Boss Encounter Design']
     },
 
     // ── § 2 ─ Screenshots ──────────────────────────────────────────────────
@@ -69,24 +75,24 @@ window.PROJECTS.tog = {
       type: 'pillar',
       title: 'Attacks as a Layered Combat Puzzle',
       brief:
-        '<p>Attacks that don’t alter how the player acts quickly lose meaning as challenges. ' +
-        'In TOG, each attack introduces a distinct challenge—on positioning, timing, or blocking—and, ' +
-        'when handled correctly, creates a clear opening as its payoff.</p>' +
+        '<p><strong>Attacks that don’t alter how the player acts quickly lose meaning as challenges.</strong> ' +
+        'In TOG, each attack introduces a <strong>distinct challenge — on positioning, timing, or blocking</strong> — and, ' +
+        'when handled correctly, <strong>creates a clear opening as its payoff</strong>.</p>' +
         '<div class="dm-tldr">' +
           '<span class="dm-tldr-tag">Goal</span>' +
-          '<span class="dm-tldr-text">Every boss action, single or chained, challenges player mastery: the harder the challenge the player takes on, the more damage and positional advantage they earn, both in the moment and across the fight.</span>' +
+          '<span class="dm-tldr-text">Every boss action, single or chained, challenges player mastery: <strong>the harder the challenge the player takes on, the more damage and positional advantage they earn</strong>, both in the moment and across the fight.</span>' +
         '</div>',
       blocks: [
         {
           type: 'subsection',
           title: 'Attack Design',
           body:
-            '<p class="dm-lead">Attacks are designed not only to challenge player mastery, but to influence player behavior into different moment to moment gameplay.</p>' +
+            '<p class="dm-lead">Attacks are designed not only to challenge player mastery, but to <strong>influence player behavior into different moment to moment gameplay</strong>.</p>' +
             '<ul class="dm-bullets">' +
-              '<li><span class="bullet-lead">Branching Behavior:</span> Combos are built from modular attack sequences that branch based on player behavior, allowing the player to take advantage of boss responses.</li>' +
-              '<li><span class="bullet-lead">Combo Themes:</span> Each combo has a distinct movement, timing, and attack identity. Variations in rhythm, trajectory, spacing, and delays improve readability while maintaining combat variety.</li>' +
-              '<li><span class="bullet-lead">Telegraph Windows:</span> Longer combo structures contain intentional telegraph, recovery, and transition windows, giving players time to recognize boss actions and prepare a response.</li>' +
-              '<li><span class="bullet-lead">Weakness Variance:</span> Some combos create large punish opportunities after successful reads, while others sustain prolonged pressure with many small opportunities for the player to interrupt them.</li>' +
+              '<li><span class="bullet-lead">Branching Behavior:</span> Combos are built from <strong>modular attack sequences that branch based on player behavior</strong>, allowing the player to take advantage of boss responses.</li>' +
+              '<li><span class="bullet-lead">Combo Themes:</span> Each combo has a <strong>distinct movement, timing, and attack identity</strong>. Variations in rhythm, trajectory, spacing, and delays improve readability while maintaining combat variety.</li>' +
+              '<li><span class="bullet-lead">Telegraph Windows:</span> Longer combo structures contain <strong>intentional telegraph, recovery, and transition windows</strong>, giving players time to recognize boss actions and prepare a response.</li>' +
+              '<li><span class="bullet-lead">Weakness Variance:</span> Some combos create <strong>large punish opportunities</strong>, while others <strong>sustain prolonged pressure with many small opportunities to interrupt</strong>.</li>' +
             '</ul>',
           media: [
             {
@@ -107,10 +113,10 @@ window.PROJECTS.tog = {
           type: 'subsection',
           title: 'Set-piece Attacks',
           body:
-            '<p class="dm-lead">Set Piece Attacks need custom programming the modular systems can’t provide; this combo sequence layers unique abilities onto the boss’s branching behavior design to drive moment-to-moment decisions.</p>' +
-            '<div class="lc-tree-header">Combo Example Tree</div>' +
-            '<div class="lc-tree-subheader">(Sword Throw Combo)</div>',
+            '<p class="dm-lead">Set Piece Attacks need <strong>custom programming the modular systems can’t provide</strong>; this combo sequence <strong>layers unique abilities onto the boss’s branching behavior design</strong> to drive moment-to-moment decisions.</p>',
           svg:
+            '<div class="lc-tree-header">Combo Example Tree</div>' +
+            '<div class="lc-tree-subheader">(Sword Throw Combo)</div>' +
             '<div class="lc-tree">' +
               '<svg viewBox="0 0 720 540" class="diag-svg lc-tree-svg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
                 '<defs>' +
@@ -178,21 +184,21 @@ window.PROJECTS.tog = {
       type: 'pillar',
       title: 'Regulating Fight Pacing',
       brief:
-        '<p>TOG regulates pace through pressure-response: sustained player aggression triggers ' +
-        'Arelius’s defensive tree, which catches a swing with a deflect and stuns the player mid-combo.</p>' +
+        '<p>TOG regulates pace through <strong>pressure-response</strong>: sustained player aggression triggers ' +
+        'Arelius’s defensive tree, which <strong>catches a swing with a deflect and stuns the player mid-combo</strong>.</p>' +
         '<div class="dm-tldr">' +
           '<span class="dm-tldr-tag">Goal</span>' +
-          '<span class="dm-tldr-text">To control the pace of a fight while still allowing player agency.</span>' +
+          '<span class="dm-tldr-text"><strong>Control the pace of a fight while still allowing player agency.</strong></span>' +
         '</div>',
       blocks: [
         {
           type: 'subsection',
           body:
-            '<p class="dm-lead">The fight was designed around contested pace control, where both the player and the boss compete to establish momentum throughout the encounter.</p>' +
+            '<p class="dm-lead">The fight was designed around <strong>contested pace control, where both the player and the boss compete to establish momentum</strong> throughout the encounter.</p>' +
             '<p>Four levers govern that contest, shuttling momentum between the boss and the player:</p>' +
 
             '<div class="di-bullet">' +
-              '<p class="di-bullet-text"><span class="bullet-lead">AI Momentum Flips:</span> After sustained player aggression, the boss counterattacks, allowing the AI to initiate its own combo, setting the pace.</p>' +
+              '<p class="di-bullet-text"><span class="bullet-lead">AI Momentum Flips:</span> After sustained player aggression, the boss counterattacks, <strong>allowing the AI to initiate its own combo, setting the pace</strong>.</p>' +
               '<div class="di-clips-row">' +
                 '<div class="dm-figure">' +
                   '<video autoplay loop muted playsinline preload="metadata" poster="./PortfolioPieces/ThreadsOfGod/clips/dashback-strong-thrust-poster.jpg">' +
@@ -210,7 +216,7 @@ window.PROJECTS.tog = {
             '</div>' +
 
             '<div class="di-bullet">' +
-              '<p class="di-bullet-text"><span class="bullet-lead">Player Momentum Flips:</span> Every attack contains weaknesses that allow skilled players to seize control by anticipating and responding correctly.</p>' +
+              '<p class="di-bullet-text"><span class="bullet-lead">Player Momentum Flips:</span> Every attack contains weaknesses that <strong>allow skilled players to seize control by anticipating and responding correctly</strong>.</p>' +
               '<div class="di-clips-row">' +
                 '<div class="dm-figure">' +
                   '<video autoplay loop muted playsinline preload="metadata" poster="./PortfolioPieces/ThreadsOfGod/clips/deflect-crescent-moon-poster.jpg">' +
@@ -228,7 +234,7 @@ window.PROJECTS.tog = {
             '</div>' +
 
             '<div class="di-bullet">' +
-              '<p class="di-bullet-text"><span class="bullet-lead">Pace Control:</span> The AI uses spacing actions to create breathing room, lowering the pace, or closes the distance quickly, increasing the pace.</p>' +
+              '<p class="di-bullet-text"><span class="bullet-lead">Pace Control:</span> The AI uses spacing actions to <strong>create breathing room, lowering the pace</strong>, or <strong>closes the distance quickly, increasing the pace</strong>.</p>' +
               '<div class="di-clips-row">' +
                 '<div class="dm-figure">' +
                   '<video autoplay loop muted playsinline preload="metadata" poster="./PortfolioPieces/ThreadsOfGod/clips/dodgeback-jump-attack-poster.jpg">' +
@@ -246,7 +252,7 @@ window.PROJECTS.tog = {
             '</div>' +
 
             '<div class="di-bullet">' +
-              '<p class="di-bullet-text"><span class="bullet-lead">Dynamic AI Behavior:</span> AI gathers data changing the chance it chooses an action based on past player behavior. For more on the probability system, jump to <a href="#tog#adaptive-enemy-ai-design">Adaptive Enemy AI Design</a>.</p>' +
+              '<p class="di-bullet-text"><span class="bullet-lead">Dynamic AI Behavior:</span> AI gathers data, <strong>changing the chance it chooses an action based on past player behavior</strong>. For more on the probability system, jump to <a href="#tog#adaptive-enemy-ai-design">Adaptive Enemy AI Design</a>.</p>' +
             '</div>'
         }
       ]
@@ -263,12 +269,12 @@ window.PROJECTS.tog = {
           type: 'paragraph',
           html:
             '<div class="proj-eyebrow">// 03 — Probability Architecture</div>' +
-            '<p class="lead">The boss has to behave intelligently, not as a memorizable pattern, so every exchange reshapes which action he picks next.</p>' +
+            '<p class="lead">The boss has to <strong>behave intelligently, not as a memorizable pattern</strong>, so every exchange reshapes which action he picks next.</p>' +
             '<ul class="tog-runtime-rules">' +
-              '<li>Each attack lives in a competing branch; when the boss reaches for one, it rolls a weighted random across the branch’s current point distribution.</li>' +
-              '<li>Every attack passed over gains points, so the longer it sits unused, the higher its chance of being picked next.</li>' +
-              '<li>On fire, the chosen attack’s points reset to zero and a separate cooldown task locks it out, so the same move never fires twice in a row.</li>' +
-              '<li>A per-attack effectiveness modifier (clamped 0.7–1.3) climbs on hit, drops on miss/block, holds on deflect, so the boss leans into what’s working.</li>' +
+              '<li>Each attack lives in a competing branch; when the boss reaches for one, it <strong>rolls a weighted random across the branch’s current point distribution</strong>.</li>' +
+              '<li>Every attack passed over gains points, so <strong>the longer it sits unused, the higher its chance of being picked next</strong>.</li>' +
+              '<li>On fire, the chosen attack’s points reset to zero and a separate cooldown task locks it out, so <strong>the same move never fires twice in a row</strong>.</li>' +
+              '<li>A per-attack effectiveness modifier (clamped 0.7–1.3) <strong>climbs on hit, drops on miss/block, holds on deflect</strong>, so the boss leans into what’s working.</li>' +
             '</ul>' +
 
             '<div class="eq-block">' +
@@ -384,15 +390,15 @@ window.PROJECTS.tog = {
               '</div>' +
             '</div>' +
 
-            '<p>Points only move when an attack result is evaluated — not on a timer. ' +
-            'A deflect leaves the modifier untouched: the player executed at the highest level, and the system doesn’t penalize the boss for it. ' +
-            'Blocks and misses pull the modifier down, so attacks that aren’t connecting accumulate slower and naturally fall back in the distribution.</p>' +
+            '<p><strong>Points only move when an attack result is evaluated — not on a timer.</strong> ' +
+            'A deflect leaves the modifier untouched: <strong>the player executed at the highest level, and the system doesn’t penalize the boss for it</strong>. ' +
+            'Blocks and misses pull the modifier down, so <strong>attacks that aren’t connecting accumulate slower and naturally fall back in the distribution</strong>.</p>' +
 
-            '<p>The system only runs on the combat tree. Narrative attacks — phase openers and crescendo moments that define the fight’s emotional arc — are hard-coded to fire reliably. ' +
-            'The defensive tree carries no point system at all: those exchanges need to feel like the player is barely surviving, and a weighted distribution would undercut that pressure.</p>' +
+            '<p><strong>The system only runs on the combat tree.</strong> Narrative attacks — phase openers and crescendo moments that define the fight’s emotional arc — are <strong>hard-coded to fire reliably</strong>. ' +
+            'The defensive tree carries no point system at all: <strong>those exchanges need to feel like the player is barely surviving</strong>, and a weighted distribution would undercut that pressure.</p>' +
 
-            '<p>Where the system has the most impact is on ranged attacks and gap-closers. ' +
-            'As the distribution shifts, the fight’s rhythm changes — trading close-quarters pressure for a cat-and-mouse dynamic of weaving through ranged attacks to find an opening on an unguarded enemy. The same boss, a different fight.</p>' +
+            '<p>Where the system has the most impact is on <strong>ranged attacks and gap-closers</strong>. ' +
+            'As the distribution shifts, the fight’s rhythm changes — <strong>trading close-quarters pressure for a cat-and-mouse dynamic</strong> of weaving through ranged attacks to find an opening on an unguarded enemy. <strong>The same boss, a different fight.</strong></p>' +
 
             '<p class="footnote">// System architected in BPC_Attacks_TOG — full implementation scoped for a future build.</p>'
         }
@@ -414,22 +420,22 @@ window.PROJECTS.tog = {
               '<div class="system-card">' +
                 '<span class="sys-icon">⚡</span>' +
                 '<h4>Combo System</h4>' +
-                '<p>Chained light and heavy sequences with movement-adaptive inputs, built to stay readable as project complexity grows.</p>' +
+                '<p><strong>Chained light and heavy sequences with movement-adaptive inputs</strong>, built to stay readable as project complexity grows.</p>' +
               '</div>' +
               '<div class="system-card">' +
                 '<span class="sys-icon">🛡</span>' +
                 '<h4>Deflection System</h4>' +
-                '<p>A normal block becomes a deflect when timed to land just before the attack hits. Designated enemy attacks add a layered QTE that resolves into counter sequences and finisher states.</p>' +
+                '<p>A normal block becomes a deflect when <strong>timed to land just before the attack hits</strong>. Designated enemy attacks add a <strong>layered QTE that resolves into counter sequences and finisher states</strong>.</p>' +
               '</div>' +
               '<div class="system-card">' +
                 '<span class="sys-icon">🔄</span>' +
                 '<h4>Stat &amp; State System</h4>' +
-                '<p>Data-driven attribute tables govern hit reactions and stagger thresholds — all exposed via data assets for tuning without recompiling.</p>' +
+                '<p><strong>Data-driven attribute tables</strong> govern hit reactions and stagger thresholds — all exposed via data assets for <strong>tuning without recompiling</strong>.</p>' +
               '</div>' +
               '<div class="system-card">' +
                 '<span class="sys-icon">🏃</span>' +
                 '<h4>Locomotion System</h4>' +
-                '<p>8-directional state machine driven by speed, angle, and weapon stance. Covers guard strafe, aim locomotion, and multi-tier landings — blended with orientation warping and procedural foot IK.</p>' +
+                '<p><strong>8-directional state machine</strong> driven by speed, angle, and weapon stance. Covers guard strafe, aim locomotion, and multi-tier landings — <strong>blended with orientation warping and procedural foot IK</strong>.</p>' +
               '</div>' +
             '</div>'
         }

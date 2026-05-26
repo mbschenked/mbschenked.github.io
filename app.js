@@ -237,6 +237,7 @@
     var inner = el('div', { class: 'content__inner', 'data-accent': p.accent || 'amber' });
     inner.appendChild(renderProjectTiles(p.slug));   // tiles start at sidebar's Y; sections follow
     inner.appendChild(renderAllSections(p));
+    inner.appendChild(renderProjectOutro(p));
     var footer = renderProjectFooter(p.slug);
     if (footer) inner.appendChild(footer);
     contentMount.appendChild(inner);
@@ -327,6 +328,17 @@
     var s = sectionShell(sec);
     var wrap = el('div', { class: 'sec-header' });
 
+    // Numbered eyebrow row — "01  Project Overview  //ProjectName".
+    // Mirrors the maxgiddens.com section-header pattern; visually distinct
+    // from the bigtitle below it so the section reads as "section 01" first.
+    var eyebrow = el('div', { class: 'sec-header__eyebrow' });
+    eyebrow.appendChild(el('span', { class: 'sec-header__num' }, '01'));
+    eyebrow.appendChild(el('span', { class: 'sec-header__sec-label' }, sec.label || 'Project Overview'));
+    if (project && project.title) {
+      eyebrow.appendChild(el('span', { class: 'sec-header__sec-subtitle' }, '//' + project.title));
+    }
+    wrap.appendChild(eyebrow);
+
     if (sec.badges && sec.badges.length) {
       var brow = el('div', { class: 'sec-header__badges' });
       sec.badges.forEach(function (b) {
@@ -338,20 +350,76 @@
     }
 
     // v2 fields: title + subtitle + lead. v1 fallback: bigTitle + body.
+    // When sec.titleVideo is present, lay title+subtitle in a 2-col flex row
+    // with a looping muted clip pinned to the right of the title block.
     var titleText = sec.title || sec.bigTitle || (project && project.title) || '';
-    if (titleText) {
-      var titleHtml = String(titleText).replace(/\s*\/\s*/, '<br/>');
-      var titleId = sec.id + '-title';
-      s.setAttribute('aria-labelledby', titleId);
-      wrap.appendChild(el('div', { id: titleId, class: 'sec-header__bigtitle', html: titleHtml }));
+    var titleHtml = titleText ? String(titleText).replace(/\s*\/\s*/, '<br/>') : '';
+    var titleId = sec.id + '-title';
+    if (titleText) s.setAttribute('aria-labelledby', titleId);
+
+    if (sec.titleVideo && (sec.titleVideo.src || sec.titleVideo.youtubeId)) {
+      var titleRow = el('div', { class: 'sec-header__title-row has-video' });
+      var titleCol = el('div', { class: 'sec-header__title-col' });
+      if (titleText) titleCol.appendChild(el('div', { id: titleId, class: 'sec-header__bigtitle', html: titleHtml }));
+      if (sec.subtitle) titleCol.appendChild(el('div', { class: 'sec-header__subtitle' }, sec.subtitle));
+      titleRow.appendChild(titleCol);
+
+      var videoWrap = el('div', { class: 'sec-header__title-video' });
+      if (sec.titleVideo.kind === 'youtube' && sec.titleVideo.youtubeId) {
+        // YouTube embed — autoplay + mute (required by autoplay policy) + loop
+        // (needs playlist=ID for single-video looping). modestbranding + rel=0 trim the chrome.
+        var ytSrc = 'https://www.youtube.com/embed/' + sec.titleVideo.youtubeId +
+                    '?autoplay=1&mute=1&loop=1&playlist=' + sec.titleVideo.youtubeId +
+                    '&modestbranding=1&rel=0';
+        if (sec.titleVideo.youtubeStart != null) ytSrc += '&start=' + encodeURIComponent(sec.titleVideo.youtubeStart);
+        var iframe = el('iframe', {
+          src: ytSrc,
+          title: sec.titleVideo.alt || (titleText + ' — embedded video'),
+          allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
+          allowfullscreen: true,
+          loading: 'lazy'
+        });
+        iframe.setAttribute('allowfullscreen', '');
+        videoWrap.appendChild(iframe);
+      } else {
+        var titleVid = el('video', {
+          autoplay: true, loop: true, muted: true, playsinline: true,
+          preload: 'metadata',
+          poster: sec.titleVideo.poster || null,
+          'aria-label': sec.titleVideo.alt || (titleText + ' — clip, looping, muted')
+        });
+        titleVid.setAttribute('muted', '');
+        titleVid.setAttribute('playsinline', '');
+        titleVid.appendChild(el('source', { src: sec.titleVideo.src, type: 'video/mp4' }));
+        videoWrap.appendChild(titleVid);
+      }
+      titleRow.appendChild(videoWrap);
+      wrap.appendChild(titleRow);
+    } else {
+      if (titleText) wrap.appendChild(el('div', { id: titleId, class: 'sec-header__bigtitle', html: titleHtml }));
+      if (sec.subtitle) wrap.appendChild(el('div', { class: 'sec-header__subtitle' }, sec.subtitle));
     }
-    if (sec.subtitle) wrap.appendChild(el('div', { class: 'sec-header__subtitle' }, sec.subtitle));
 
     var leadHtml = sec.lead != null ? sec.lead : sec.body;
-    if (leadHtml) {
-      var leadEl = el('div', { class: 'sec-header__body section-prose' });
-      leadEl.innerHTML = Array.isArray(leadHtml) ? leadHtml.map(function (p) { return '<p>' + p + '</p>'; }).join('') : leadHtml;
-      wrap.appendChild(leadEl);
+    var leadString = Array.isArray(leadHtml)
+      ? leadHtml.map(function (p) { return '<p>' + p + '</p>'; }).join('')
+      : leadHtml;
+
+    if (leadString && sec.focuses) {
+      // Two-column overview body: left = high-concept summary, right = design focuses.
+      var overview = el('div', { class: 'sec-header__overview' });
+      overview.appendChild(el('div', {
+        class: 'sec-header__overview-col sec-header__overview-col--lead section-prose',
+        html: leadString
+      }));
+      overview.appendChild(el('div', { class: 'sec-header__overview-divider', 'aria-hidden': 'true' }));
+      overview.appendChild(el('div', {
+        class: 'sec-header__overview-col sec-header__overview-col--focuses section-prose',
+        html: sec.focuses
+      }));
+      wrap.appendChild(overview);
+    } else if (leadString) {
+      wrap.appendChild(el('div', { class: 'sec-header__body section-prose', html: leadString }));
     }
 
     // meta: accepts array (v1) or object (v2 — Phase C may emit { role, engine, timeframe })
@@ -704,6 +772,46 @@
     var gallery = (p.sections || []).find(function (s) { return s.type === 'gallery' && s.images && s.images.length; });
     if (gallery) return gallery.images[0].src;
     return null;
+  }
+
+  // ── Project outro — celebratory end-of-read CTA + contact + sign-off ─────
+  // Rendered after all sections, before the next-project footer. Shared
+  // content across both projects; accent color flows through via parent
+  // [data-accent] so amber/tbh both work without per-project data. Heading
+  // glow + spark twinkle only run once .visible is set by the fade-up
+  // observer, so the celebration triggers on scroll-into-view.
+  function renderProjectOutro(p) {
+    var primaryBtnCls = (p.accent === 'tbh') ? 'btn-tbh' : 'btn-amber';
+    var outro = el('section', { class: 'proj-outro fade-up', 'aria-label': 'End of project — contact' });
+
+    var headline = el('div', { class: 'proj-outro__headline' });
+    headline.appendChild(el('span', { class: 'proj-outro__spark', 'aria-hidden': 'true' }, '✦'));
+    headline.appendChild(el('h2', { class: 'proj-outro__title' }, 'You Made It To The End!'));
+    headline.appendChild(el('span', { class: 'proj-outro__spark', 'aria-hidden': 'true' }, '✦'));
+    outro.appendChild(headline);
+
+    var contact = el('div', { class: 'proj-outro__contact' });
+    contact.appendChild(el('a', {
+      href: 'mailto:mbschenked@gmail.com',
+      class: 'btn ' + primaryBtnCls
+    }, 'mbschenked@gmail.com'));
+    contact.appendChild(el('a', {
+      href: 'https://www.linkedin.com/in/max-schenk-gamedesign',
+      target: '_blank', rel: 'noopener noreferrer',
+      class: 'btn btn-ghost'
+    }, 'LinkedIn'));
+    contact.appendChild(el('a', {
+      href: 'https://vfs-gdpg.itch.io/the-broken-hero',
+      target: '_blank', rel: 'noopener noreferrer',
+      class: 'btn btn-ghost'
+    }, 'itch.io'));
+    outro.appendChild(contact);
+
+    outro.appendChild(el('p', {
+      class: 'proj-outro__signoff'
+    }, 'There is so much I was unable to include in this project breakdown — playtester changes, breakdowns of specific attacks, designing matching player abilities and movements to the boss\'s to make an interesting pairing, the theory behind it, and more. Contact me if you want to chat — I always want to talk about combat design and its theory!'));
+
+    return outro;
   }
 
   // ── Next-project footer ──────────────────────────────────────────────────
