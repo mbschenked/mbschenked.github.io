@@ -429,10 +429,10 @@
   function renderOverviewBody(sec, project, leadString) {
     if (sec.takeawaysInline && project && project.takeaways && project.takeaways.length) {
       var overviewTa = el('div', { class: 'sec-header__overview' });
-      overviewTa.appendChild(el('div', {
-        class: 'sec-header__overview-col sec-header__overview-col--lead section-prose',
-        html: leadString
-      }));
+      var taLeft = el('div', { class: 'sec-header__overview-col sec-header__overview-col--lead' });
+      taLeft.appendChild(blockLabelRow('Summary'));
+      taLeft.appendChild(el('div', { class: 'section-prose', html: leadString }));
+      overviewTa.appendChild(taLeft);
       overviewTa.appendChild(el('div', { class: 'sec-header__overview-divider', 'aria-hidden': 'true' }));
       var taRight = el('div', { class: 'sec-header__overview-col sec-header__overview-col--takeaways' });
       taRight.appendChild(blockLabelRow('Key Takeaways'));
@@ -444,10 +444,10 @@
     }
     if (sec.focuses) {
       var overview = el('div', { class: 'sec-header__overview' });
-      overview.appendChild(el('div', {
-        class: 'sec-header__overview-col sec-header__overview-col--lead section-prose',
-        html: leadString
-      }));
+      var fLeft = el('div', { class: 'sec-header__overview-col sec-header__overview-col--lead' });
+      fLeft.appendChild(blockLabelRow('Summary'));
+      fLeft.appendChild(el('div', { class: 'section-prose', html: leadString }));
+      overview.appendChild(fLeft);
       overview.appendChild(el('div', { class: 'sec-header__overview-divider', 'aria-hidden': 'true' }));
       overview.appendChild(el('div', {
         class: 'sec-header__overview-col sec-header__overview-col--focuses section-prose',
@@ -913,7 +913,7 @@
 
     outro.appendChild(el('p', {
       class: 'proj-outro__signoff'
-    }, 'There is so much I was unable to include in this project breakdown — playtester changes, breakdowns of specific attacks, designing matching player abilities and movements to the boss\'s to make an interesting pairing, the theory behind it, and more. Contact me if you want to chat — I always want to talk about combat design and its theory!'));
+    }, 'There is so much I was unable to include in this project breakdown — playtester changes, breakdowns of specific attacks, designing matching player abilities and movements to the boss\'s to make an interesting pairing, designing rewarding player aggression and player risk taking, the theory behind it, and more. Contact me if you want to chat — I always want to talk about combat design and its theory!'));
 
     return outro;
   }
@@ -942,7 +942,7 @@
   }
 
   // ═════════════════════════════════════════════════════════════════════════
-  // SIDEBAR — project title / summary / TOC / tools / takeaways
+  // SIDEBAR — project title / TOC / tools / takeaways
   // ═════════════════════════════════════════════════════════════════════════
   // Renders a labeled block heading with the locked ASCII icon on the left.
   // Falls back to a plain h3 if the label has no icon registered.
@@ -963,11 +963,6 @@
     if (p.subtitle) {
       var sub = String(p.subtitle).replace(/^\/\/\s*/, '');
       sidebarMount.appendChild(el('div', { class: 'side__project-sub' }, sub));
-    }
-
-    if (p.summary) {
-      sidebarMount.appendChild(blockLabelRow('Summary'));
-      sidebarMount.appendChild(el('p', { class: 'side__summary' }, p.summary));
     }
 
     if (p.sections && p.sections.length) {

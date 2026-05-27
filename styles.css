@@ -256,12 +256,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 [data-accent="tbh"] .side__icon { color: var(--tbh); }
 
-.side__summary {
-  font-size: 0.86rem;
-  line-height: 1.6;
-  color: var(--text);
-  margin: 0;
-}
 .side__toc {
   list-style: none;
   padding: 0;
@@ -813,15 +807,12 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   max-width: 70ch;
 }
 .section-prose p + p { margin-top: 1rem; }
-/* Inline <strong> highlights in body prose. Warm-gold tint reads as
-   highlighted vs body text without competing with the louder bullet-lead
-   anchors (amber-bright at 700 weight). Accent-aware via [data-accent]. */
+/* Inline <strong> highlights in body prose. Bright white + bolder weight
+   for scannability — body text is --text (#adb1c4 grey), so an explicit
+   --white (#edf0f8) is needed to make highlights pop. */
 .section-prose strong {
-  color: color-mix(in srgb, var(--amber-bright) 50%, var(--white) 50%);
+  color: var(--white);
   font-weight: 600;
-}
-[data-accent="tbh"] .section-prose strong {
-  color: color-mix(in srgb, var(--tbh) 50%, var(--white) 50%);
 }
 .section-prose em { color: var(--text-bright); font-style: italic; }
 .section-prose a { color: var(--cyan); border-bottom: 1px dotted rgba(46,184,204,0.4); }
@@ -1171,11 +1162,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .sec-header__overview-col p:last-child { margin-bottom: 0; }
 .sec-header__overview-col strong {
-  color: color-mix(in srgb, var(--amber-bright) 50%, var(--white) 50%);
+  color: var(--white);
   font-weight: 600;
-}
-[data-accent="tbh"] .sec-header__overview-col strong {
-  color: color-mix(in srgb, var(--tbh) 50%, var(--white) 50%);
 }
 @media (max-width: 700px) {
   .sec-header__overview {
