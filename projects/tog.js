@@ -74,12 +74,24 @@ window.PROJECTS.tog = {
             '<p class="dm-lead">Attacks are designed not only to <strong>challenge player mastery</strong>, but to <strong>influence player behavior</strong> into different moment to moment gameplay.</p>' +
             '<ul class="dm-bullets">' +
               '<li><span class="bullet-lead">Branching Behavior:</span> Combos are built from <strong>modular attack sequences that branch based on player behavior</strong>, allowing the player to take advantage of boss responses.</li>' +
-              '<li><span class="bullet-lead">Attack Transitions:</span> Most combos have <strong>multiple openers, movement leads, and extended follow-ups</strong>, so the same sequence doesn\'t <strong>feel mechanically scripted</strong> each time it appears.</li>' +
               '<li><span class="bullet-lead">Combo Themes:</span> Each combo has a <strong>distinct movement, timing, and attack identity</strong>. Variations in rhythm, trajectory, spacing, and delays <strong>improve readability while maintaining combat variety</strong>.</li>' +
               '<li><span class="bullet-lead">Telegraph Windows:</span> Longer combo structures contain <strong>intentional telegraph, recovery, and transition windows</strong>, giving <strong>players time to</strong> recognize boss actions and <strong>prepare a response</strong>.</li>' +
               '<li><span class="bullet-lead">Weakness Variety:</span> Some enemy combos create <strong>large punish opportunities</strong>, while others <strong>sustain pressure</strong> with <strong>many small opportunities to interrupt</strong> and, deal significant posture damage.</li>' +
+              '<li><span class="bullet-lead">Attack Transitions:</span> Most combos have <strong>multiple openers, movement leads, and extended follow-ups</strong>, so the same sequence doesn\'t <strong>feel mechanically scripted</strong> each time it appears.</li>' +
             '</ul>',
           media: [
+            {
+              kind: 'video',
+              src: './PortfolioPieces/ThreadsOfGod/clips/extended-exchange.mp4',
+              poster: './PortfolioPieces/ThreadsOfGod/clips/extended-exchange-poster.jpg',
+              caption: 'Extended Exchange'
+            },
+            {
+              kind: 'video',
+              src: './PortfolioPieces/ThreadsOfGod/clips/overhead-slam.mp4',
+              poster: './PortfolioPieces/ThreadsOfGod/clips/overhead-slam-poster.jpg',
+              caption: 'Overhead Slam'
+            },
             {
               kind: 'video',
               src: './PortfolioPieces/ThreadsOfGod/clips/main-combo.mp4',
@@ -97,18 +109,6 @@ window.PROJECTS.tog = {
               src: './PortfolioPieces/ThreadsOfGod/clips/main-combo-thrust.mp4',
               poster: './PortfolioPieces/ThreadsOfGod/clips/main-combo-thrust-poster.jpg',
               caption: 'Main Combo + Thrust'
-            },
-            {
-              kind: 'video',
-              src: './PortfolioPieces/ThreadsOfGod/clips/extended-exchange.mp4',
-              poster: './PortfolioPieces/ThreadsOfGod/clips/extended-exchange-poster.jpg',
-              caption: 'Extended Exchange'
-            },
-            {
-              kind: 'video',
-              src: './PortfolioPieces/ThreadsOfGod/clips/overhead-slam.mp4',
-              poster: './PortfolioPieces/ThreadsOfGod/clips/overhead-slam-poster.jpg',
-              caption: 'Overhead Slam'
             }
           ]
         },
