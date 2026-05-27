@@ -103,12 +103,6 @@ window.PROJECTS.tog = {
               src: './PortfolioPieces/ThreadsOfGod/clips/combo-break-out.mp4',
               poster: './PortfolioPieces/ThreadsOfGod/clips/combo-break-out-poster.jpg',
               caption: 'Mid-Combo Break Out'
-            },
-            {
-              kind: 'video',
-              src: './PortfolioPieces/ThreadsOfGod/clips/main-combo-thrust.mp4',
-              poster: './PortfolioPieces/ThreadsOfGod/clips/main-combo-thrust-poster.jpg',
-              caption: 'Main Combo + Thrust'
             }
           ]
         },
