@@ -98,6 +98,7 @@
   var lightboxState = null; // { images, idx, onKeydown }
   var fadeObserver = null;  // fade-up IntersectionObserver
   var scrollSpy = null;     // TOC scroll-spy IntersectionObserver
+  var heroScrollObs = null; // hero-banner intersection → fades scroll-indicator
   var liveVideos = [];      // live <video> elements (so we can pause them on route swap)
   var drawerOpen = false;
   var currentLvl = null;    // last-rendered project slug (for tile is-current state)
@@ -277,7 +278,40 @@
     if (hero.src) video.appendChild(el('source', { src: hero.src, type: 'video/mp4' }));
     wrap.appendChild(video);
     wrap.appendChild(el('div', { class: 'hero-banner__vignette' }));
+
+    var indicator = buildHeroScrollIndicator();
+    wrap.appendChild(indicator);
+    setupHeroScrollObs(wrap, indicator);
+
     return wrap;
+  }
+
+  // ── Hero scroll-indicator ────────────────────────────────────────────────
+  // Three cascading down-triangles at bottom-center of the hero; pulse-staggered
+  // opacity loop signals "scroll for more." Pure decoration → aria-hidden.
+  function buildHeroScrollIndicator() {
+    var wrap = el('div', { class: 'hero-scroll-indicator', 'aria-hidden': 'true' });
+    wrap.appendChild(el('span', { class: 'hsi-tri', text: '▾' }));
+    wrap.appendChild(el('span', { class: 'hsi-tri', text: '▾' }));
+    wrap.appendChild(el('span', { class: 'hsi-tri', text: '▾' }));
+    return wrap;
+  }
+
+  function setupHeroScrollObs(banner, indicator) {
+    teardownHeroScrollObs();
+    if (!('IntersectionObserver' in window)) return;
+    heroScrollObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        // Fade when banner is mostly scrolled past (less than ~30% visible).
+        if (entry.intersectionRatio < 0.3) indicator.classList.add('is-faded');
+        else indicator.classList.remove('is-faded');
+      });
+    }, { threshold: [0, 0.3, 0.6, 1] });
+    heroScrollObs.observe(banner);
+  }
+
+  function teardownHeroScrollObs() {
+    if (heroScrollObs) { heroScrollObs.disconnect(); heroScrollObs = null; }
   }
 
   // ── All-sections render ──────────────────────────────────────────────────
@@ -1049,6 +1083,7 @@
   // ═════════════════════════════════════════════════════════════════════════
   function renderBio() {
     teardownScrollSpy();
+    teardownHeroScrollObs();
     pauseLiveVideos();
     teardownHeroCanvas();
     heroMount.innerHTML = '';
