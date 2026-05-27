@@ -912,8 +912,9 @@
     outro.appendChild(contact);
 
     outro.appendChild(el('p', {
-      class: 'proj-outro__signoff'
-    }, 'There is so much I was unable to include in this project breakdown — playtester changes, breakdowns of specific attacks, designing matching player abilities and movements to the boss\'s to make an interesting pairing, designing rewarding player aggression and player risk taking, the theory behind it, and more. Contact me if you want to chat — I always want to talk about combat design and its theory!'));
+      class: 'proj-outro__signoff',
+      html: '<strong>There is so much I was unable to include in this project breakdown</strong> — playtester changes, breakdowns of specific attacks, designing matching player abilities and movements to the boss\'s to make an interesting pairing, <strong>designing rewarding player aggression</strong> and player risk taking, the theory behind it, and more. Contact me if you want to chat — I always want to talk about combat design and its theory!'
+    }));
 
     return outro;
   }
