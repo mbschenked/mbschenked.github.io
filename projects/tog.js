@@ -96,19 +96,13 @@ window.PROJECTS.tog = {
               kind: 'video',
               src: './PortfolioPieces/ThreadsOfGod/clips/main-combo-thrust.mp4',
               poster: './PortfolioPieces/ThreadsOfGod/clips/main-combo-thrust-poster.jpg',
-              caption: 'Main Combo + Thrust'
-            },
-            {
-              kind: 'video',
-              src: './PortfolioPieces/ThreadsOfGod/clips/combo-break-out.mp4',
-              poster: './PortfolioPieces/ThreadsOfGod/clips/combo-break-out-poster.jpg',
-              caption: 'Mid-Combo Break Out'
+              caption: 'Main Combo Intro Attack : Far Range'
             },
             {
               kind: 'video',
               src: './PortfolioPieces/ThreadsOfGod/clips/main-combo.mp4',
               poster: './PortfolioPieces/ThreadsOfGod/clips/main-combo-poster.jpg',
-              caption: 'Main Combo (Standard)'
+              caption: 'Main Combo Intro Attack : Close Range'
             }
           ]
         },
