@@ -386,13 +386,13 @@ window.PROJECTS.tog = {
             'A deflect leaves the modifier untouched: <strong>the player executed at the highest level, and the system doesn’t penalize the boss for it</strong>. ' +
             'Blocks and misses pull the modifier down, so <strong>attacks that aren’t connecting accumulate slower and naturally fall back in the distribution</strong>.</p>' +
 
-            '<p><strong>The system only runs on the combat tree.</strong> Thematic actions and crescendo moments that define the fight’s emotional arc — are <strong>hard-coded to fire reliably</strong>. ' +
+            '<p><strong>The system only runs on the combat tree.</strong> Thematic actions and crescendo moments that define the fight’s emotional arc, are <strong>hard-coded to fire reliably</strong>. ' +
             'The defensive tree carries no point system at all: <strong>those exchanges need to feel like the player is barely surviving</strong>, and a weighted distribution would undercut that pressure.</p>' +
 
             '<p>Where the system has the most impact is on <strong>ranged attacks and gap-closers</strong>. ' +
-            'As the distribution shifts, the fight’s rhythm changes — <strong>trading close-quarters pressure for a cat-and-mouse dynamic</strong> of weaving through ranged attacks to find an opening on an unguarded enemy. <strong>The same boss, a different fight.</strong></p>' +
+            'As the distribution shifts, the fight’s rhythm changes, <strong>trading close-quarters pressure for a cat-and-mouse dynamic</strong> of weaving through ranged attacks to find an opening on an unguarded enemy. <strong>The same boss, a different fight.</strong></p>' +
 
-            '<p class="footnote">// System architected in BPC_Attacks_TOG — full implementation scoped for a future build.</p>'
+            '<p class="footnote">// System architected in BPC_Attacks_TOG, full implementation scoped for a future build.</p>'
         }
       ]
     },
