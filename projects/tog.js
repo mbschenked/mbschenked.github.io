@@ -1,6 +1,6 @@
 /* Threads of God — Phase C v2 schema.
-   7 sections: project-overview, screenshots, combat-puzzle, fight-pacing,
-   adaptive-enemy-ai-design, core-systems, boss-ai-arelius.
+   6 sections: project-overview, combat-puzzle, fight-pacing,
+   adaptive-enemy-ai-design, core-systems, resources-used.
    Source-of-truth: ../../index.html (decision-modal briefs ~1836-1869, d01
    2382-2423, d02 2425-2459, d04 2576-2648, tog-stack panels for §§ 6-7).
    Copy ported verbatim from live site — do not rewrite voice here. */
@@ -9,21 +9,22 @@ window.PROJECTS.tog = {
   slug: 'tog',
   title: 'Threads of God',
   subtitle: '// Combat Demo · Unreal Engine 5',
+  timeline: '3.5 months',
   accent: 'amber',
   summary: 'A solo-built third-person combat demo in UE5. Every boss attack is a layered puzzle — forcing position, timing, and mechanic choice simultaneously to create an opening the player has to earn.',
   tools: ['Unreal Engine 5', 'C++', 'Solo Developer', 'Blueprint', 'Behavior Trees', 'Cascadeur', 'Boss Encounter Design'],
   takeaways: [
     '<span class="bullet-lead">4+ modular core systems authored</span>: Combo (buffered-input), Deflection, Stat & State, Locomotion, DamageTraceSystem. All data-driven and tunable without recompile.',
-    '<span class="bullet-lead">100+ attacks designed</span>, edited, and implemented across multiple communicating behavior trees.',
+    '<span class="bullet-lead">100+ attacks designed</span>, edited, implemented, and tested, improving boss readability and combat balance.',
     "<span class=\"bullet-lead\">350+ custom blueprint functions written</span>, spanning 9-directional movement and physics, so the boss's attacks and positioning feel like they're responding to the player.",
     '<span class="bullet-lead">70+ enemy actions routed</span> through a memory-mimicking behavior tree, producing non-repetitive boss behavior.',
     '<span class="bullet-lead">20+ playtests conducted</span>, tuning boss behavior and addressing player annoyances based on feedback data, <span class="bullet-lead">increasing player retention by 40%</span>.'
   ],
   hero: {
-    src: './PortfolioPieces/ThreadsOfGod/clips/tog-hero-loop.mp4',
-    poster: './PortfolioPieces/ThreadsOfGod/clips/tog-hero-poster.jpg'
+    src: '../PortfolioPieces/ThreadsOfGod/clips/tog-hero-loop.mp4',
+    poster: '../PortfolioPieces/ThreadsOfGod/clips/tog-hero-poster.jpg'
   },
-  thumb: './PortfolioPieces/ThreadsOfGod/AreliusCircleAttack2.jpg',
+  thumb: '../PortfolioPieces/ThreadsOfGod/AreliusCircleAttack2.jpg',
   sections: [
 
     // ── § 1 ─ Project Overview ─────────────────────────────────────────────
@@ -44,14 +45,14 @@ window.PROJECTS.tog = {
         alt: 'Threads of God — full demo encounter against Arelius'
       },
       images: [
-        { src: './PortfolioPieces/ThreadsOfGod/HighresScreenshot00000.jpg', alt: 'White light trail attack' },
-        { src: './PortfolioPieces/ThreadsOfGod/AreliusCircleAttack1.jpg', alt: 'Circle AOE attack' },
-        { src: './PortfolioPieces/ThreadsOfGod/AreliusGroundSlash.jpg', alt: 'Ground slash barrier' },
-        { src: './PortfolioPieces/ThreadsOfGod/Arelius Pose Attack.jpg', alt: 'Combat at sunset' },
-        { src: './PortfolioPieces/ThreadsOfGod/AreliusWindUpAttack.jpg', alt: 'Wind-up attack' },
-        { src: './PortfolioPieces/ThreadsOfGod/Arelius Launch Attack.jpg', alt: 'Arelius launch attack' },
-        { src: './PortfolioPieces/ThreadsOfGod/AreliusCircleAttack2.jpg', alt: 'Circle attack variant' },
-        { src: './PortfolioPieces/ThreadsOfGod/HighresScreenshot00001.jpg', alt: 'Overhead strike' }
+        { src: '../PortfolioPieces/ThreadsOfGod/HighresScreenshot00000.jpg', alt: 'White light trail attack' },
+        { src: '../PortfolioPieces/ThreadsOfGod/AreliusCircleAttack1.jpg', alt: 'Circle AOE attack' },
+        { src: '../PortfolioPieces/ThreadsOfGod/AreliusGroundSlash.jpg', alt: 'Ground slash barrier' },
+        { src: '../PortfolioPieces/ThreadsOfGod/Arelius Pose Attack.jpg', alt: 'Combat at sunset' },
+        { src: '../PortfolioPieces/ThreadsOfGod/AreliusWindUpAttack.jpg', alt: 'Wind-up attack' },
+        { src: '../PortfolioPieces/ThreadsOfGod/Arelius Launch Attack.jpg', alt: 'Arelius launch attack' },
+        { src: '../PortfolioPieces/ThreadsOfGod/AreliusCircleAttack2.jpg', alt: 'Circle attack variant' },
+        { src: '../PortfolioPieces/ThreadsOfGod/HighresScreenshot00001.jpg', alt: 'Overhead strike' }
       ]
     },
 
@@ -64,7 +65,7 @@ window.PROJECTS.tog = {
       brief:
         '<div class="dm-tldr">' +
           '<span class="dm-tldr-tag">Goal</span>' +
-          '<span class="dm-tldr-text">Every boss action, single or chained, challenges player mastery: <strong>the harder the challenge the player takes on, the more damage and positional advantage they earn</strong>, both in the moment and across the fight.</span>' +
+          '<span class="dm-tldr-text">Every boss action challenges player mastery: <strong>the harder the challenge the player takes on, the more damage and positional advantage they earn</strong>, both in the moment and across the fight.</span>' +
         '</div>',
       blocks: [
         {
@@ -72,39 +73,105 @@ window.PROJECTS.tog = {
           title: 'Attack Design',
           body:
             '<p class="dm-lead">Attacks are designed not only to <strong>challenge player mastery</strong>, but to <strong>influence player behavior</strong> into different moment to moment gameplay.</p>' +
-            '<ul class="dm-bullets">' +
-              '<li><span class="bullet-lead">Branching Behavior:</span> Combos are built from <strong>modular attack sequences that branch based on player behavior</strong>, allowing the player to take advantage of boss responses.</li>' +
-              '<li><span class="bullet-lead">Combo Themes:</span> Each combo has a <strong>distinct movement, timing, and attack identity</strong>. Variations in rhythm, trajectory, spacing, and delays <strong>improve readability while maintaining combat variety</strong>.</li>' +
-              '<li><span class="bullet-lead">Telegraph Windows:</span> Longer combo structures contain <strong>intentional telegraph, recovery, and transition windows</strong>, giving <strong>players time to</strong> recognize boss actions and <strong>prepare a response</strong>.</li>' +
-              '<li><span class="bullet-lead">Weakness Variety:</span> Some enemy combos create <strong>large punish opportunities</strong>, while others <strong>sustain pressure</strong> with <strong>many small opportunities to interrupt</strong> and, deal significant posture damage.</li>' +
-              '<li><span class="bullet-lead">Attack Transitions:</span> <strong>Most attacks</strong> and combos have <strong>multiple opening actions</strong> prior to the main attacks. This allows the boss to choose actions that make the <strong>main attacks feel natural</strong>. This has also been applied to exiting attacks.</li>' +
-            '</ul>',
-          media: [
-            {
-              kind: 'video',
-              src: './PortfolioPieces/ThreadsOfGod/clips/extended-exchange.mp4',
-              poster: './PortfolioPieces/ThreadsOfGod/clips/extended-exchange-poster.jpg',
-              caption: 'Extended Exchange'
-            },
-            {
-              kind: 'video',
-              src: './PortfolioPieces/ThreadsOfGod/clips/overhead-slam.mp4',
-              poster: './PortfolioPieces/ThreadsOfGod/clips/overhead-slam-poster.jpg',
-              caption: 'Overhead Slam'
-            },
-            {
-              kind: 'video',
-              src: './PortfolioPieces/ThreadsOfGod/clips/main-combo-thrust.mp4',
-              poster: './PortfolioPieces/ThreadsOfGod/clips/main-combo-thrust-poster.jpg',
-              caption: 'Main Combo Intro Attack : Far Range'
-            },
-            {
-              kind: 'video',
-              src: './PortfolioPieces/ThreadsOfGod/clips/main-combo.mp4',
-              poster: './PortfolioPieces/ThreadsOfGod/clips/main-combo-poster.jpg',
-              caption: 'Main Combo Intro Attack : Close Range'
-            }
-          ]
+
+            '<div class="di-bullet">' +
+              '<p class="di-bullet-text"><span class="bullet-lead">Branching Behavior:</span> Combos are built from <strong>modular attack sequences that branch based on player behavior</strong>, allowing the player to take advantage of boss responses.</p>' +
+              '<div class="di-clips-row">' +
+                '<div class="dm-figure">' +
+                  '<video autoplay loop muted playsinline preload="metadata" aria-label="Semi Randomized Combo — combat clip, looping, muted" poster="../PortfolioPieces/ThreadsOfGod/clips/leaping-dive-slam-poster.jpg">' +
+                    '<source src="../PortfolioPieces/ThreadsOfGod/clips/leaping-dive-slam.mp4" type="video/mp4">' +
+                  '</video>' +
+                  '<div class="dm-figcaption">Semi Randomized Combo</div>' +
+                '</div>' +
+                '<div class="di-vfx-note">' +
+                  '<div class="di-vfx-title">Attack Order</div>' +
+                  '<div class="di-vfx-step">Charged Punch</div>' +
+                  '<div class="di-vfx-arrow">↓</div>' +
+                  '<div class="di-vfx-step">Crescent Moon Slice</div>' +
+                  '<div class="di-vfx-arrow">↓</div>' +
+                  '<div class="di-vfx-group">' +
+                    '<div class="di-vfx-group-stack">' +
+                      '<div class="di-vfx-step">Dash Right</div>' +
+                      '<div class="di-vfx-arrow">↓</div>' +
+                      '<div class="di-vfx-step">Leaping Jump Attack</div>' +
+                    '</div>' +
+                    '<div class="di-vfx-group-label">Jump Attack Combo</div>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="di-bullet">' +
+              '<p class="di-bullet-text"><span class="bullet-lead">Combo Themes:</span> Each combo has a <strong>distinct movement, timing, and attack identity</strong>. Variations in rhythm, trajectory, spacing, and delays <strong>improve readability while maintaining combat variety</strong>.</p>' +
+              '<div class="di-clips-row">' +
+                '<div class="dm-figure">' +
+                  '<video autoplay loop muted playsinline preload="metadata" aria-label="Dash - Jump Attack — combat clip, looping, muted" poster="../PortfolioPieces/ThreadsOfGod/clips/dash-jump-slice-poster.jpg">' +
+                    '<source src="../PortfolioPieces/ThreadsOfGod/clips/dash-jump-slice.mp4" type="video/mp4">' +
+                  '</video>' +
+                  '<div class="dm-figcaption">Dash - Jump Attack</div>' +
+                '</div>' +
+                '<div class="dm-figure">' +
+                  '<video autoplay loop muted playsinline preload="metadata" aria-label="Phase 2 Thrust Attack Slow — combat clip, looping, muted" poster="../PortfolioPieces/ThreadsOfGod/clips/dash-in-dive-poster.jpg">' +
+                    '<source src="../PortfolioPieces/ThreadsOfGod/clips/dash-in-dive.mp4" type="video/mp4">' +
+                  '</video>' +
+                  '<div class="dm-figcaption">Phase 2 : Thrust Attack (Slow)</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="di-bullet">' +
+              '<p class="di-bullet-text"><span class="bullet-lead">Telegraph Windows:</span> Longer combo structures contain <strong>intentional telegraph, recovery, and transition windows</strong>, giving <strong>players time to</strong> recognize boss actions and <strong>prepare a response</strong>.</p>' +
+              '<div class="di-clips-row">' +
+                '<div class="dm-figure">' +
+                  '<video autoplay loop muted playsinline preload="metadata" aria-label="Phase 2 360 Horizontal Slice — combat clip, looping, muted" poster="../PortfolioPieces/ThreadsOfGod/clips/shockwave-slam-poster.jpg">' +
+                    '<source src="../PortfolioPieces/ThreadsOfGod/clips/shockwave-slam.mp4" type="video/mp4">' +
+                  '</video>' +
+                  '<div class="dm-figcaption">Phase 2 : 360 Horizontal Slice</div>' +
+                '</div>' +
+                '<div class="dm-figure">' +
+                  '<video autoplay loop muted playsinline preload="metadata" aria-label="Phase 2 Horizontal Slice plus Thrust — combat clip, looping, muted" poster="../PortfolioPieces/ThreadsOfGod/clips/closing-beam-strike-poster.jpg">' +
+                    '<source src="../PortfolioPieces/ThreadsOfGod/clips/closing-beam-strike.mp4" type="video/mp4">' +
+                  '</video>' +
+                  '<div class="dm-figcaption">Phase 2 : Horizontal Slice + Thrust</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="di-bullet">' +
+              '<p class="di-bullet-text"><span class="bullet-lead">Weakness Variety:</span> Some enemy combos create <strong>large punish opportunities</strong>, while others <strong>sustain pressure</strong> with <strong>many small opportunities to interrupt</strong> and deal significant posture damage.</p>' +
+              '<div class="di-clips-row">' +
+                '<div class="dm-figure">' +
+                  '<video autoplay loop muted playsinline preload="metadata" aria-label="Main Combo : Staggered — combat clip, looping, muted" poster="../PortfolioPieces/ThreadsOfGod/clips/unarmed-hammer-fist-poster.jpg">' +
+                    '<source src="../PortfolioPieces/ThreadsOfGod/clips/unarmed-hammer-fist.mp4" type="video/mp4">' +
+                  '</video>' +
+                  '<div class="dm-figcaption">Main Combo : Staggered</div>' +
+                '</div>' +
+                '<div class="dm-figure">' +
+                  '<video autoplay loop muted playsinline preload="metadata" aria-label="Phase 2 Downward Slice Mixup Version into Lunge Vertical Slice — combat clip, looping, muted" poster="../PortfolioPieces/ThreadsOfGod/clips/overhead-slam-poster.jpg">' +
+                    '<source src="../PortfolioPieces/ThreadsOfGod/clips/overhead-slam.mp4" type="video/mp4">' +
+                  '</video>' +
+                  '<div class="dm-figcaption">Phase 2 : Downward Slice (Mixup Version) → Lunge Vertical Slice</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="di-bullet">' +
+              '<p class="di-bullet-text"><span class="bullet-lead">Attack Transitions:</span> <strong>Most attacks</strong> and combos have <strong>multiple opening actions</strong> prior to the main attacks. This allows the boss to choose actions that make the <strong>main attacks feel natural</strong>. This has also been applied to exiting attacks.</p>' +
+              '<div class="di-clips-row">' +
+                '<div class="dm-figure">' +
+                  '<video autoplay loop muted playsinline preload="metadata" aria-label="Main Combo Intro Attack Far Range — combat clip, looping, muted" poster="../PortfolioPieces/ThreadsOfGod/clips/main-combo-thrust-poster.jpg">' +
+                    '<source src="../PortfolioPieces/ThreadsOfGod/clips/main-combo-thrust.mp4" type="video/mp4">' +
+                  '</video>' +
+                  '<div class="dm-figcaption">Main Combo Intro Attack : Far Range</div>' +
+                '</div>' +
+                '<div class="dm-figure">' +
+                  '<video autoplay loop muted playsinline preload="metadata" aria-label="Main Combo Intro Attack Close Range — combat clip, looping, muted" poster="../PortfolioPieces/ThreadsOfGod/clips/main-combo-poster.jpg">' +
+                    '<source src="../PortfolioPieces/ThreadsOfGod/clips/main-combo.mp4" type="video/mp4">' +
+                  '</video>' +
+                  '<div class="dm-figcaption">Main Combo Intro Attack : Close Range</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>'
         },
         {
           type: 'subsection',
@@ -133,9 +200,7 @@ window.PROJECTS.tog = {
                 '<text x="360" y="134" text-anchor="middle" class="label">BLOCK</text>' +
                 '<text x="600" y="134" text-anchor="middle" class="label">DODGE</text>' +
                 '<rect x="20" y="148" width="200" height="138" rx="6" class="box"/>' +
-                '<text x="120" y="306" text-anchor="middle" class="text-sm">QTE — sword ripped</text>' +
                 '<rect x="260" y="148" width="200" height="138" rx="6" class="box"/>' +
-                '<text x="360" y="306" text-anchor="middle" class="text-sm">block → sword launched</text>' +
                 '<rect x="500" y="148" width="200" height="46" rx="6" class="box--key"/>' +
                 '<text x="600" y="176" text-anchor="middle" class="title">DODGE</text>' +
                 '<text x="600" y="210" text-anchor="middle" class="text-xs">3 sub-outcomes by timing</text>' +
@@ -148,26 +213,23 @@ window.PROJECTS.tog = {
                 '<text x="360" y="354" text-anchor="middle" class="label">DEFLECT LAYERING</text>' +
                 '<text x="600" y="354" text-anchor="middle" class="label">TRIPLE DODGE</text>' +
                 '<rect x="20" y="368" width="200" height="138" rx="6" class="box"/>' +
-                '<text x="120" y="524" text-anchor="middle" class="text-sm">dodge → hit</text>' +
                 '<rect x="260" y="368" width="200" height="138" rx="6" class="box"/>' +
-                '<text x="360" y="524" text-anchor="middle" class="text-sm">dodge → deflect layering</text>' +
                 '<rect x="500" y="368" width="200" height="138" rx="6" class="box"/>' +
-                '<text x="600" y="524" text-anchor="middle" class="text-sm">triple dodge</text>' +
               '</svg>' +
               '<video class="lc-tree-leaf lc-tree-leaf--hit"    autoplay loop muted playsinline preload="metadata">' +
-                '<source src="./PortfolioPieces/ThreadsOfGod/Combat Clips/SwordRipped.mp4" type="video/mp4">' +
+                '<source src="../PortfolioPieces/ThreadsOfGod/Combat Clips/SwordRipped.mp4" type="video/mp4">' +
               '</video>' +
               '<video class="lc-tree-leaf lc-tree-leaf--block"  autoplay loop muted playsinline preload="metadata">' +
-                '<source src="./PortfolioPieces/ThreadsOfGod/Combat Clips/BossAttack-Blocked-SwordLaunched.mp4" type="video/mp4">' +
+                '<source src="../PortfolioPieces/ThreadsOfGod/Combat Clips/BossAttack-Blocked-SwordLaunched.mp4" type="video/mp4">' +
               '</video>' +
               '<video class="lc-tree-leaf lc-tree-leaf--caught" autoplay loop muted playsinline preload="metadata">' +
-                '<source src="./PortfolioPieces/ThreadsOfGod/Combat Clips/Dodged-Hit.mp4" type="video/mp4">' +
+                '<source src="../PortfolioPieces/ThreadsOfGod/Combat Clips/Dodged-Hit.mp4" type="video/mp4">' +
               '</video>' +
               '<video class="lc-tree-leaf lc-tree-leaf--parry"  autoplay loop muted playsinline preload="metadata">' +
-                '<source src="./PortfolioPieces/ThreadsOfGod/Combat Clips/Dodged-Parried-Parried.mp4" type="video/mp4">' +
+                '<source src="../PortfolioPieces/ThreadsOfGod/Combat Clips/Dodged-Parried-Parried.mp4" type="video/mp4">' +
               '</video>' +
               '<video class="lc-tree-leaf lc-tree-leaf--triple" autoplay loop muted playsinline preload="metadata">' +
-                '<source src="./PortfolioPieces/ThreadsOfGod/Combat Clips/Dodge-dodge-dodge-V6.mp4" type="video/mp4">' +
+                '<source src="../PortfolioPieces/ThreadsOfGod/Combat Clips/Dodge-dodge-dodge-V6.mp4" type="video/mp4">' +
               '</video>' +
             '</div>'
         }
@@ -196,14 +258,14 @@ window.PROJECTS.tog = {
               '<p class="di-bullet-text"><span class="bullet-lead">AI Momentum Flips:</span> After sustained player aggression, the boss counterattacks, <strong>allowing the AI to initiate its own combo, setting the pace</strong>.</p>' +
               '<div class="di-clips-row">' +
                 '<div class="dm-figure">' +
-                  '<video autoplay loop muted playsinline preload="metadata" poster="./PortfolioPieces/ThreadsOfGod/clips/dashback-strong-thrust-poster.jpg">' +
-                    '<source src="./PortfolioPieces/ThreadsOfGod/clips/dashback-strong-thrust.mp4" type="video/mp4">' +
+                  '<video autoplay loop muted playsinline preload="metadata" poster="../PortfolioPieces/ThreadsOfGod/clips/dashback-strong-thrust-poster.jpg">' +
+                    '<source src="../PortfolioPieces/ThreadsOfGod/clips/dashback-strong-thrust.mp4" type="video/mp4">' +
                   '</video>' +
                   '<div class="dm-figcaption">Perfect Counter : Dodgeback Thrust (Quick)</div>' +
                 '</div>' +
                 '<div class="dm-figure">' +
-                  '<video autoplay loop muted playsinline preload="metadata" poster="./PortfolioPieces/ThreadsOfGod/clips/jump-attack-poster.jpg">' +
-                    '<source src="./PortfolioPieces/ThreadsOfGod/clips/jump-attack.mp4" type="video/mp4">' +
+                  '<video autoplay loop muted playsinline preload="metadata" poster="../PortfolioPieces/ThreadsOfGod/clips/jump-attack-poster.jpg">' +
+                    '<source src="../PortfolioPieces/ThreadsOfGod/clips/jump-attack.mp4" type="video/mp4">' +
                   '</video>' +
                   '<div class="dm-figcaption">Perfect Counter : Jump Attack</div>' +
                 '</div>' +
@@ -214,16 +276,16 @@ window.PROJECTS.tog = {
               '<p class="di-bullet-text"><span class="bullet-lead">Player Momentum Flips:</span> Every attack contains weaknesses that <strong>allow skilled players to seize control by anticipating and responding correctly</strong>.</p>' +
               '<div class="di-clips-row">' +
                 '<div class="dm-figure">' +
-                  '<video autoplay loop muted playsinline preload="metadata" poster="./PortfolioPieces/ThreadsOfGod/clips/deflect-crescent-moon-poster.jpg">' +
-                    '<source src="./PortfolioPieces/ThreadsOfGod/clips/deflect-crescent-moon.mp4" type="video/mp4">' +
+                  '<video autoplay loop muted playsinline preload="metadata" poster="../PortfolioPieces/ThreadsOfGod/clips/deflect-crescent-moon-poster.jpg">' +
+                    '<source src="../PortfolioPieces/ThreadsOfGod/clips/deflect-crescent-moon.mp4" type="video/mp4">' +
                   '</video>' +
-                  '<div class="dm-figcaption">Deflect · CrescentMoonLunge-PerfectPlayerDeflects</div>' +
+                  '<div class="dm-figcaption">Crescent Moon Lunge : Interrupt</div>' +
                 '</div>' +
                 '<div class="dm-figure">' +
-                  '<video autoplay loop muted playsinline preload="metadata" poster="./PortfolioPieces/ThreadsOfGod/clips/counter-punch-thrust-poster.jpg">' +
-                    '<source src="./PortfolioPieces/ThreadsOfGod/clips/counter-punch-thrust.mp4" type="video/mp4">' +
+                  '<video autoplay loop muted playsinline preload="metadata" poster="../PortfolioPieces/ThreadsOfGod/clips/counter-punch-thrust-poster.jpg">' +
+                    '<source src="../PortfolioPieces/ThreadsOfGod/clips/counter-punch-thrust.mp4" type="video/mp4">' +
                   '</video>' +
-                  '<div class="dm-figcaption">CounterPunch · StrongThrustAttack-V2</div>' +
+                  '<div class="dm-figcaption">Parry</div>' +
                 '</div>' +
               '</div>' +
             '</div>' +
@@ -232,19 +294,28 @@ window.PROJECTS.tog = {
               '<p class="di-bullet-text"><span class="bullet-lead">Pace Control:</span> The AI uses spacing actions to <strong>create breathing room, lowering the pace</strong>, or <strong>closes the distance quickly, increasing the pace</strong>.</p>' +
               '<div class="di-clips-row">' +
                 '<div class="dm-figure">' +
-                  '<video autoplay loop muted playsinline preload="metadata" poster="./PortfolioPieces/ThreadsOfGod/clips/dodgeback-jump-attack-poster.jpg">' +
-                    '<source src="./PortfolioPieces/ThreadsOfGod/clips/dodgeback-jump-attack.mp4" type="video/mp4">' +
+                  '<video autoplay loop muted playsinline preload="metadata" poster="../PortfolioPieces/ThreadsOfGod/clips/dodgeback-jump-attack-poster.jpg">' +
+                    '<source src="../PortfolioPieces/ThreadsOfGod/clips/dodgeback-jump-attack.mp4" type="video/mp4">' +
                   '</video>' +
                   '<div class="dm-figcaption">Boss retreats to reclaim space, then re-engages with a leaping slam</div>' +
                 '</div>' +
                 '<div class="dm-figure">' +
-                  '<video autoplay loop muted playsinline preload="metadata" poster="./PortfolioPieces/ThreadsOfGod/clips/jumpback-aerial-attack-poster.jpg">' +
-                    '<source src="./PortfolioPieces/ThreadsOfGod/clips/jumpback-aerial-attack.mp4" type="video/mp4">' +
+                  '<video autoplay loop muted playsinline preload="metadata" poster="../PortfolioPieces/ThreadsOfGod/clips/jumpback-aerial-attack-poster.jpg">' +
+                    '<source src="../PortfolioPieces/ThreadsOfGod/clips/jumpback-aerial-attack.mp4" type="video/mp4">' +
                   '</video>' +
-                  '<div class="dm-figcaption">JumpBackAerial · JumpBackAerialAttack</div>' +
+                  '<div class="dm-figcaption">Aerial Ranged Attack</div>' +
                 '</div>' +
               '</div>' +
-              '<p class="di-bullet-note">Note: other forms of pace control are implemented as well, including Extended Telegraphs, Extended Cooldowns, staggering, and attacks that — when blocked by the player — initiate a "blowback animation" which resets the pace.</p>' +
+              '<p class="di-bullet-note">Note: other forms of pace control are implemented as well, including Extended Telegraphs, Extended Cooldowns, staggering, and attacks that — when blocked by the player — initiate a "' +
+                '<span class="preview-trigger" title="Phase 2 : 360 Horizontal Slice">blowback animation' +
+                  '<span class="preview-popup" aria-hidden="true">' +
+                    '<video loop muted playsinline preload="metadata" poster="../PortfolioPieces/ThreadsOfGod/clips/shockwave-slam-poster.jpg">' +
+                      '<source src="../PortfolioPieces/ThreadsOfGod/clips/shockwave-slam.mp4" type="video/mp4">' +
+                    '</video>' +
+                    '<span class="preview-popup-caption">Phase 2 : 360 Horizontal Slice</span>' +
+                  '</span>' +
+                '</span>' +
+              '" which resets the pace.</p>' +
             '</div>'
         }
       ]
@@ -261,18 +332,18 @@ window.PROJECTS.tog = {
           type: 'paragraph',
           html:
             '<div class="proj-eyebrow">// 04 — Probability Architecture</div>' +
-            '<p class="lead">The boss has to <strong>behave intelligently, not as a memorizable pattern</strong>, so every exchange reshapes which action he picks next.</p>' +
+            '<p class="lead">The boss has to <strong>behave intelligently, not as a memorizable pattern</strong>, so every exchange with the player reshapes which action he picks next.</p>' +
             '<ul class="tog-runtime-rules">' +
-              '<li>Each attack lives in a competing branch; when an action is chosen, the chance of it occurring is its total points divided by the sum of the entire branch.</li>' +
-              '<li>Every unchosen action gains points; the chosen action\'s points are set to zero, ensuring it cannot be chosen for at least one turn.</li>' +
-              '<li>The longer an action isn\'t chosen, the larger the chance it will be chosen, ensuring the likelihood that it will occur soon.</li>' +
-              '<li>A per-attack effectiveness modifier (clamped 0.7–1.3) <strong>climbs on hit, drops on miss/block, holds on deflect</strong>, so the boss leans into what’s working.</li>' +
+              '<li>Each attack lives in a competing branch; when an action is chosen, <strong>chance, points / sum of entire branch</strong>.</li>' +
+              '<li><strong>Unchosen actions gain points; the chosen action\'s points are set to zero</strong>.</li>' +
+              '<li><strong>The longer an action isn\'t chosen</strong> the larger amount of points accumulated, <strong>increasing the likelihood that it will occur soon</strong>.</li>' +
+              '<li>A per-attack effectiveness modifier (clamped 0.7–1.3) <strong>increases on hit, decreases on miss/block, is unchanged on deflect</strong>, so successful actions occur more frequently.</li>' +
             '</ul>' +
 
             '<div class="eq-block">' +
               '<div class="eq-label">// Selection Probability</div>' +
               '<div class="eq-row">' +
-                '<span class="eq-lhs"><em>P</em>(<em>i</em>)</span>' +
+                '<span class="eq-lhs"><em>P<sub>i+1</sub></em></span>' +
                 '<span class="eq-op">=</span>' +
                 '<span class="eq-fraction">' +
                   '<span class="eq-num"><em>P<sub>i</sub></em></span>' +
@@ -287,20 +358,23 @@ window.PROJECTS.tog = {
               '<div class="eq-sep"></div>' +
               '<div class="eq-label">// Point Accumulation (attack <em>i</em> not selected at decision)</div>' +
               '<div class="eq-row">' +
-                '<em>P<sub>i</sub></em>' +
-                '<span class="eq-op">←</span>' +
-                '<em>P<sub>i</sub></em> + 1 · <em>m<sub>i</sub></em> · <em>w</em>(<em>H<sub>i</sub></em>)' +
+                '<em>P<sub>i+1</sub></em>' +
+                '<span class="eq-op">=</span>' +
+                '<em>P<sub>i</sub></em> + <em>m<sub>i</sub></em> · <em>W<sub>i</sub></em>' +
               '</div>' +
-              '<div class="eq-note">base = 1  ·  <em>m<sub>i</sub></em> ∈ [0.7, 1.3]  ·  P<sub>i</sub>(init) = 0</div>' +
+              '<div class="eq-note"><em>m<sub>i</sub></em> ∈ [0.7, 1.3]  ·  P<sub>i</sub>(init) = 1</div>' +
+
+              '<div class="eq-sep"></div>' +
+              '<div class="eq-label">// On Action Chosen</div>' +
+              '<div class="eq-row"><em>P<sub>i</sub></em> <span class="eq-op">=</span> 0</div>' +
 
               '<div class="eq-sep"></div>' +
               '<div class="eq-label">// On Successful Hit</div>' +
-              '<div class="eq-row"><em>m<sub>i</sub></em> <span class="eq-op">←</span> clamp(<em>m<sub>i</sub></em> + Δ<em>m</em>,  0.7,  1.3)</div>' +
-              '<div class="eq-row"><em>P<sub>i</sub></em> <span class="eq-op">←</span> 0</div>' +
+              '<div class="eq-row"><em>m<sub>i</sub></em> <span class="eq-op">=</span> clamp(<em>m<sub>i</sub></em> + Δ<em>m</em>,  0.7,  1.3)</div>' +
 
               '<div class="eq-sep"></div>' +
               '<div class="eq-label">// On Miss or Block</div>' +
-              '<div class="eq-row"><em>m<sub>i</sub></em> <span class="eq-op">←</span> clamp(<em>m<sub>i</sub></em> − Δ<em>m</em>,  0.7,  1.3)</div>' +
+              '<div class="eq-row"><em>m<sub>i</sub></em> <span class="eq-op">=</span> clamp(<em>m<sub>i</sub></em> − Δ<em>m</em>,  0.7,  1.3)</div>' +
 
               '<div class="eq-sep"></div>' +
               '<div class="eq-label">// On Deflect</div>' +
@@ -308,11 +382,11 @@ window.PROJECTS.tog = {
             '</div>' +
 
             '<div class="eq-legend">' +
-              '<div><em>P<sub>i</sub></em> — accumulated points for attack <em>i</em>; initialized at 0, updated only on attack result</div>' +
+              '<div><em>P<sub>i</sub></em> — accumulated points for attack <em>i</em>; initialized at 1, updated only on attack result</div>' +
               '<div><em>n</em> — total attacks in the branch</div>' +
               '<div><em>m<sub>i</sub></em> — effectiveness modifier; clamped to [0.7, 1.3]; rises on hit, falls on miss/block, untouched on deflect</div>' +
-              '<div><em>w(H<sub>i</sub>)</em> — hit weight; scales points added based on whether the attack would connect</div>' +
-              '<div><em>P<sub>i</sub></em> ← 0 — reset on successful hit; enforces cooldown before the attack can re-accumulate</div>' +
+              '<div><em>W<sub>i</sub></em> — The action\'s Weight Constant. This is the constant amount of points added prior to <em>m<sub>i</sub></em>. Used to more broadly impact an action\'s chance of occurring.</div>' +
+              '<div><em>P<sub>i</sub></em> = 0 — resets on action chosen; enforces a cooldown before the attack can re-accumulate</div>' +
             '</div>' +
 
             '<div class="diag-wrap">' +
@@ -382,17 +456,15 @@ window.PROJECTS.tog = {
               '</div>' +
             '</div>' +
 
-            '<p><strong>Points only move when an attack result is evaluated.</strong> ' +
+            '<p><strong>For a chosen action, points only change when an attack result is evaluated.</strong> ' +
             'A deflect leaves the modifier untouched: <strong>the player executed at the highest level, and the system doesn’t penalize the boss for it</strong>. ' +
             'Blocks and misses pull the modifier down, so <strong>attacks that aren’t connecting accumulate slower and naturally fall back in the distribution</strong>.</p>' +
 
             '<p><strong>The system only runs on the combat tree.</strong> Thematic actions and crescendo moments that define the fight’s emotional arc are <strong>hard-coded to fire reliably</strong>. ' +
-            'The defensive tree carries no point system at all: <strong>those exchanges need to feel like the player is barely surviving</strong>, and a weighted distribution would undercut that pressure.</p>' +
+            'The defensive tree carries no point system at all, and a weighted distribution led to a less crafted experience.</p>' +
 
             '<p>Where the system has the most impact is on <strong>ranged attacks and gap-closers</strong>. ' +
-            'As the distribution shifts, the fight’s rhythm changes, <strong>trading close-quarters pressure for a cat-and-mouse dynamic</strong> of weaving through ranged attacks to find an opening on an unguarded enemy. <strong>The same boss, a different fight.</strong></p>' +
-
-            '<p class="footnote">// System architected in BPC_Attacks_TOG, full implementation scoped for a future build.</p>'
+            'As the distribution shifts, the fight’s rhythm changes, <strong>trading close-quarters pressure for a cat-and-mouse dynamic</strong> of weaving through ranged attacks to find an opening on an unguarded enemy.</p>'
         }
       ]
     },
@@ -434,97 +506,45 @@ window.PROJECTS.tog = {
       ]
     },
 
-    // ── § 6 ─ Boss AI — Arelius ────────────────────────────────────────────
-    // NOTE: Boss AI tag chips were buttons with onclick="openAIDoc('...')" in live site,
-    // opening per-system documentation in a modal. Portfolio-0.2 v2 ports them as plain
-    // <span> labels; the AI doc modal is deferred to a follow-on phase. 37 chips affected.
+    // ── § 6 ─ Resources Used ─────────────────────────────────────────────
+    // Pack names sourced from the TOG project .gitignore (third-party Marketplace
+    // content excluded from git). Author attributions verified via web search
+    // against UE Marketplace / Fab listings; flagged TBD where ambiguous.
     {
-      id: 'boss-ai-arelius',
-      label: 'Boss AI — Arelius',
+      id: 'resources-used',
+      label: 'Resources Used',
       type: 'prose',
-      title: 'Boss AI — Arelius',
+      title: 'Resources Used',
       blocks: [
         {
           type: 'paragraph',
           html:
-            '<div class="proj-eyebrow">// 06 — Behavior Tree Architecture</div>' +
-            '<div class="ai-stats-row">' +
-              '<div class="ai-stat"><span class="ai-stat-num">100+</span><span class="ai-stat-label">Named Attacks</span></div>' +
-              '<div class="ai-stat"><span class="ai-stat-num">2</span><span class="ai-stat-label">Fight Phases</span></div>' +
-              '<div class="ai-stat"><span class="ai-stat-num">8</span><span class="ai-stat-label">Decorators</span></div>' +
-              '<div class="ai-stat"><span class="ai-stat-num">9</span><span class="ai-stat-label">Tasks</span></div>' +
-              '<div class="ai-stat"><span class="ai-stat-num">9</span><span class="ai-stat-label">Anim Notifies</span></div>' +
-              '<div class="ai-stat"><span class="ai-stat-num">11</span><span class="ai-stat-label">Notify Events</span></div>' +
-              '<div class="ai-stat"><span class="ai-stat-num">2</span><span class="ai-stat-label">Parallel Trees</span></div>' +
+            '<div class="proj-eyebrow">// 06 — Credits &amp; Attribution</div>' +
+            '<p class="lead">Resources used in making this demo. Without such a talented and giving community, none of this would have been possible. Thank you!</p>' +
+            '<p><strong>Only Animation files were used from these Animation packs.</strong> Raw Animations were minorly edited; however, their <strong>movements, timings, and pairings were heavily edited</strong>. VFX\'s timings and scale were minorly edited.</p>' +
+            '<div class="resource-group">' +
+              '<h4>Animation Packs</h4>' +
+              '<ul class="resource-list">' +
+                '<li><span class="resource-main"><a href="https://www.unrealengine.com/marketplace/en-US/product/sword-animset-pro" target="_blank" rel="noopener"><strong>Sword Animset Pro</strong></a> <span class="resource-author">— Kubold</span></span><span class="resource-role">Boss Animations + Player Dodge</span></li>' +
+                '<li><span class="resource-main"><a href="https://www.unrealengine.com/marketplace/en-US/product/essential-sword-shield-animations" target="_blank" rel="noopener"><strong>Essential Sword &amp; Shield Animation Pack</strong></a> <span class="resource-author">— space.bar.anim</span></span><span class="resource-role">Player Animations</span></li>' +
+                '<li><span class="resource-main"><a href="https://www.unrealengine.com/marketplace/en-US/product/ghostsamurai-bundle" target="_blank" rel="noopener"><strong>GhostSamurai Bundle</strong></a> <span class="resource-author">— WM Animset</span></span><span class="resource-role">Boss Animations + QTE Animations</span></li>' +
+              '</ul>' +
             '</div>' +
-            '<div class="bt-tree">' +
-              '<div class="bt-label">// Behavior Tree Hierarchy</div>' +
-              '<div class="bt-row"><span class="bt-connector">▸</span><span class="bt-node"><span class="bt-key">BT_Arelius</span> <span class="bt-comment">— root selector</span></span></div>' +
-              '<div class="bt-row bt-indent"><span class="bt-connector">├─</span><span class="bt-node">BT_PassiveState</span></div>' +
-              '<div class="bt-row bt-indent"><span class="bt-connector">└─</span><span class="bt-node"><span class="bt-key">BT_Arelius_Combat</span> <span class="bt-comment">— phase-gated via BTD_CheckPhase</span></span></div>' +
-              '<div class="bt-row bt-indent-2"><span class="bt-connector">├─</span><span class="bt-node"><span class="bt-key">BT_Combat_Phase1</span> <span class="bt-comment">— melee combos, lunges, counters, gap-closers</span></span></div>' +
-              '<div class="bt-row bt-indent-2"><span class="bt-connector">└─</span><span class="bt-node"><span class="bt-key">BT_Combat_Phase2</span> <span class="bt-comment">— adds teleport attacks, projectile slashes, vanish</span></span></div>' +
-              '<div class="bt-spacer"></div>' +
-              '<div class="bt-row"><span class="bt-connector">▸</span><span class="bt-node"><span class="bt-key">BT_Arelius_DefensiveTree</span> <span class="bt-comment">— runs when player sets pace, fires interjects and pattern-break deflects</span></span></div>' +
+            '<div class="resource-group">' +
+              '<h4>VFX Packs</h4>' +
+              '<ul class="resource-list">' +
+                '<li><span class="resource-main"><a href="https://www.unrealengine.com/marketplace/en-US/product/blink-and-dash-vfx" target="_blank" rel="noopener"><strong>Blink and Dash VFX</strong></a> <span class="resource-author">— pelengami</span></span><span class="resource-role">Boss Animations</span></li>' +
+                '<li><span class="resource-main"><a href="https://www.unrealengine.com/marketplace/en-US/product/realistic-starter-vfx-pack-vol" target="_blank" rel="noopener"><strong>Realistic Starter VFX Pack Vol 2</strong></a> <span class="resource-author">— Anton Pasichnyk</span></span><span class="resource-role">Player + Boss Animations</span></li>' +
+              '</ul>' +
             '</div>' +
-            '<div class="ai-tags">' +
-              '<div class="ai-tag-group">' +
-                '<div class="ai-tag-title">Custom Decorators</div>' +
-                '<div class="ai-tag-list">' +
-                  '<span class="ai-tag">BTD_CheckPhase</span>' +
-                  '<span class="ai-tag">BTD_InRange</span>' +
-                  '<span class="ai-tag">BTD_InIdealRange</span>' +
-                  '<span class="ai-tag">BTD_PlayerVelocityWithinDesiredValues</span>' +
-                  '<span class="ai-tag">BTD_FollowUpChance</span>' +
-                  '<span class="ai-tag">BTD_CheckAttackParameters</span>' +
-                  '<span class="ai-tag">BTD_CheckIfAttackTargetNull</span>' +
-                  '<span class="ai-tag">BTD_IsWeaponEquipped</span>' +
-                '</div>' +
-              '</div>' +
-              '<div class="ai-tag-group">' +
-                '<div class="ai-tag-title">Custom Tasks</div>' +
-                '<div class="ai-tag-list">' +
-                  '<span class="ai-tag">BTT_Attacks</span>' +
-                  '<span class="ai-tag">BTT_Dash</span>' +
-                  '<span class="ai-tag">BTT_Strafe</span>' +
-                  '<span class="ai-tag">BTT_MoveToTarget</span>' +
-                  '<span class="ai-tag">BTT_SetMovementMode</span>' +
-                  '<span class="ai-tag">BTT_EquipWeapon</span>' +
-                  '<span class="ai-tag">BTT_UnequipWeapon</span>' +
-                  '<span class="ai-tag">BTT_FocusTarget</span>' +
-                  '<span class="ai-tag">BTT_HitReaction</span>' +
-                '</div>' +
-              '</div>' +
-              '<div class="ai-tag-group">' +
-                '<div class="ai-tag-title">Custom Anim Notifies</div>' +
-                '<div class="ai-tag-list">' +
-                  '<span class="ai-tag">ANS_SetInterruptibility</span>' +
-                  '<span class="ai-tag">ANS_SetRespondToPlayerActions</span>' +
-                  '<span class="ai-tag">ANS_RotateActorInGivenDirection</span>' +
-                  '<span class="ai-tag">ANS_RotateActorAroundPoint</span>' +
-                  '<span class="ai-tag">ANS_SetAnimPlayRate</span>' +
-                  '<span class="ai-tag">ANS_UpdateAttackTargetLocationToRotateJoints</span>' +
-                  '<span class="ai-tag">ANS_SpawnMovingEffect</span>' +
-                  '<span class="ai-tag">ANS_SpawnEffectDetachedFromLocation</span>' +
-                  '<span class="ai-tag">ANS_CheckDistance</span>' +
-                '</div>' +
-              '</div>' +
-              '<div class="ai-tag-group">' +
-                '<div class="ai-tag-title">Anim Notify Events</div>' +
-                '<div class="ai-tag-list">' +
-                  '<span class="ai-tag">AN_DynamicResponse</span>' +
-                  '<span class="ai-tag">AN_FinishAttackBranchOverride</span>' +
-                  '<span class="ai-tag">AN_StartCounterDeflectWindow</span>' +
-                  '<span class="ai-tag">AN_UpdateAiReactionKey</span>' +
-                  '<span class="ai-tag">AN_SetActionState</span>' +
-                  '<span class="ai-tag">AN_ResetAttackParameters</span>' +
-                  '<span class="ai-tag">AN_InitiateTeleportToSword</span>' +
-                  '<span class="ai-tag">AN_MaxDeflectAmountMet</span>' +
-                  '<span class="ai-tag">AN_UpdateGuardFacingDirection</span>' +
-                  '<span class="ai-tag">AN_UpdatePerfectParryCounter</span>' +
-                  '<span class="ai-tag">AN_KnockedDown</span>' +
-                '</div>' +
-              '</div>' +
+            '<div class="resource-group">' +
+              '<h4>Free Epic Games Content</h4>' +
+              '<ul class="resource-list">' +
+                '<li><span class="resource-main"><a href="https://www.unrealengine.com/en-US/paragon" target="_blank" rel="noopener"><strong>Paragon: Gideon, Sparrow, Feng Mao</strong></a> <span class="resource-author">— Epic Games</span></span><span class="resource-role">Boss Animations</span></li>' +
+                '<li><span class="resource-main"><strong>Starter Content</strong> <span class="resource-author">— Epic Games</span></span></li>' +
+                '<li><span class="resource-main"><a href="https://www.unrealengine.com/marketplace/en-US/product/a36bac8b05004e999dd4b1d332501f49" target="_blank" rel="noopener"><strong>FX Variety Pack</strong></a> <span class="resource-author">— Kakky (free permanent collection)</span></span></li>' +
+                '<li><span class="resource-main"><a href="https://www.unrealengine.com/marketplace/en-US/product/rocket-thruster-exhaust-fx" target="_blank" rel="noopener"><strong>Rocket Thruster Exhaust FX</strong></a> <span class="resource-author">— Shogun Games (free permanent collection)</span></span><span class="resource-role">Boss Animations (2nd Phase)</span></li>' +
+              '</ul>' +
             '</div>'
         }
       ]

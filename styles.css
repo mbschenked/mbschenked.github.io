@@ -219,6 +219,28 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 [data-accent="amber"] .side__project-sub { color: var(--amber-bright); }
 [data-accent="tbh"]   .side__project-sub { color: var(--tbh); }
 
+/* Tighten subtitle's bottom gap when the Timeline pill sits directly below it,
+   so they read as a paired identifier block rather than two separate stanzas. */
+.side__project-sub:has(+ .side__timeline) {
+  margin-bottom: 0.5rem;
+}
+.side__timeline {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  margin-bottom: 1.6rem;
+}
+.side__timeline-label {
+  color: var(--muted);
+}
+.side__timeline-value {
+  color: var(--text-bright);
+}
+
 /* Sidebar block-label — mono uppercase, no effects. */
 .side__block-label {
   margin: 0;
@@ -467,6 +489,13 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 @keyframes hsiTriPulse {
   0%, 100% { opacity: 0; transform: translateY(-3px); }
   50%      { opacity: 1; transform: translateY(0); }
+}
+/* Reduced-motion: pause the indicator pulse + fade-up scroll animations.
+   Combined with the prefers-reduced-motion guard in app.js playVideosInSection,
+   the page goes still — looping clip posters render in place of autoplay. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-scroll-indicator .hsi-tri { animation: none; opacity: 1; }
+  .fade-up { transition: none; opacity: 1; transform: none; }
 }
 
 /* ── Project section (scroll-spy target, one per TOC entry) ─────────────── */
@@ -1180,8 +1209,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 /* Reset the sidebar-row top margin when used inside any overview column
    — the column itself already starts at the grid's top edge, so both the
    --lead Summary glyph header and the --takeaways Key Takeaways glyph
-   header should sit flush with the top edge (otherwise the labels drift
-   apart vertically). */
+   header sit flush with the top edge (otherwise the labels drift apart
+   vertically). */
 .sec-header__overview-col .side__block-row { margin-top: 0; }
 .overview-takeaways {
   list-style: none;
@@ -1319,12 +1348,17 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   border-bottom: 1px dotted var(--cyan-dim);
 }
 .di-bullet-text a:hover { color: var(--white); border-bottom-color: var(--white); }
+/* Flex-wrap layout sizes every tile at one 2-col cell, regardless of count.
+   1 clip = left-aligned half tile; 2 clips = pair; 3 clips wrap to 2-on-top
+   + 1-on-bottom (no lopsided empty grid cells). */
 .di-clips-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.85rem;
 }
 .dm-figure {
+  flex: 0 0 calc((100% - 0.85rem) / 2);
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -1357,6 +1391,76 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   line-height: 1.55;
   margin: 0.4rem 0 0;
   opacity: 0.85;
+}
+.di-vfx-note {
+  flex: 0 0 calc((100% - 0.85rem) / 2);
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1rem 0.85rem;
+  text-align: center;
+  background: var(--cyan-dim);
+  border: 1px solid rgba(46, 184, 204, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+}
+.di-vfx-step {
+  color: var(--cyan);
+}
+.di-vfx-arrow {
+  color: var(--cyan);
+  opacity: 0.55;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+.di-vfx-title {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid rgba(46, 184, 204, 0.25);
+  width: 100%;
+}
+.di-vfx-group {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  align-self: stretch;
+  column-gap: 0.7rem;
+}
+.di-vfx-group-stack {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px dashed rgba(46, 184, 204, 0.5);
+  border-radius: 4px;
+}
+.di-vfx-group-label {
+  grid-column: 3;
+  justify-self: start;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  opacity: 0.85;
+  max-width: 6rem;
+  line-height: 1.35;
+  text-align: left;
 }
 
 /* ── Shared section-internal primitives ──────────────────────────────────── */
@@ -1657,7 +1761,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .eq-num {
   padding: 0 0.4rem 0.1rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--text-bright);
 }
 .eq-den {
   padding: 0.1rem 0.4rem 0;
@@ -1888,8 +1992,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
 /* ── Responsive tweaks for new section types ─────────────────────────────── */
 @media (max-width: 700px) {
-  .di-clips-row {
-    grid-template-columns: 1fr;
+  .dm-figure {
+    flex-basis: 100%;
   }
   .sec-header__bigtitle { font-size: clamp(2.2rem, 9vw, 3rem); }
 }
@@ -2368,4 +2472,122 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   .brand .brand__role {
     display: none;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Hover-preview tooltip
+   Inline trigger word with a small floating video popup. Used to give a quick
+   visual glossary entry without committing to a full figure. JS hook in
+   app.js wires play-on-hover so the hidden video doesn't consume cycles.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.preview-trigger {
+  position: relative;
+  text-decoration: underline dotted;
+  text-decoration-color: var(--cyan);
+  text-underline-offset: 2px;
+  cursor: help;
+}
+.preview-popup {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  padding: 6px;
+  background: rgba(8, 12, 20, 0.96);
+  border: 1px solid var(--cyan);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 50;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+.preview-popup video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+.preview-popup-caption {
+  display: block;
+  margin-top: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  line-height: 1.2;
+  color: var(--cyan);
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+.preview-trigger:hover .preview-popup,
+.preview-trigger:focus-within .preview-popup {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Resources Used section — credits/attribution
+   ═══════════════════════════════════════════════════════════════════════════ */
+.resource-group {
+  margin-top: 1.75rem;
+}
+.resource-group h4 {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin: 0 0 0.6rem 0;
+  font-weight: 500;
+}
+.resource-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.resource-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.resource-list li:last-child {
+  border-bottom: none;
+}
+.resource-list .resource-main {
+  flex: 1 1 auto;
+}
+.resource-list strong {
+  color: var(--text-bright);
+  font-weight: 600;
+}
+.resource-list .resource-main a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(46, 184, 204, 0.4);
+  transition: color 0.15s ease, border-bottom-color 0.15s ease;
+}
+.resource-list .resource-main a:hover {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
+}
+.resource-list .resource-main a strong {
+  color: inherit;
+}
+.resource-list .resource-author {
+  color: var(--text);
+  font-style: italic;
+  font-size: 0.9em;
+}
+.resource-list .resource-role {
+  color: var(--cyan);
+  font-style: italic;
+  font-size: 0.88em;
+  text-align: right;
+  flex-shrink: 0;
 }
