@@ -10,6 +10,7 @@ window.PROJECTS.tbh = {
   accent: 'tbh',
   title: 'The Broken Hero',
   subtitle: '// Unity · Gameplay Programmer · itch.io',
+  timeline: '6 months',
   summary:
     'A single-player 3D fixed-camera puzzle-platformer — a Greek soldier reborn from ' +
     'an ancient fresco, navigating a collapsing temple while switching between the ' +
@@ -23,11 +24,11 @@ window.PROJECTS.tbh = {
     '<span class="bullet-lead">Composed setpiece camera shots</span> for the project’s major cinematic moments.'
   ],
   hero: {
-    src: './PortfolioPieces/ThreadsOfGod/clips/tog-hero-loop.mp4',
-    poster: './PortfolioPieces/ThreadsOfGod/clips/tog-hero-poster.jpg',
+    src: '../PortfolioPieces/ThreadsOfGod/clips/tog-hero-loop.mp4',
+    poster: '../PortfolioPieces/ThreadsOfGod/clips/tog-hero-poster.jpg',
     alt: 'Portfolio gameplay reel — Threads of God combat interleaved with The Broken Hero platforming, looping, muted'
   },
-  thumb: './PortfolioPieces/The Broken Hero/Screenshot 2026-04-15 152759.png',
+  thumb: '../PortfolioPieces/The Broken Hero/Screenshot 2026-04-15 152759.png',
   sections: [
 
     // ── § 1 ─ Project Overview ─────────────────────────────────────────────
@@ -60,10 +61,10 @@ window.PROJECTS.tbh = {
       type: 'gallery',
       title: 'Screenshots',
       images: [
-        { src: './PortfolioPieces/The Broken Hero/Screenshot 2026-04-15 152759.png', alt: 'TBH scene 1' },
-        { src: './PortfolioPieces/The Broken Hero/Screenshot 2026-04-15 152830.png', alt: 'TBH scene 2' },
-        { src: './PortfolioPieces/The Broken Hero/Screenshot 2026-04-15 152855.png', alt: 'TBH scene 3' },
-        { src: './PortfolioPieces/The Broken Hero/Screenshot 2026-04-15 152916.png', alt: 'TBH scene 4' }
+        { src: '../PortfolioPieces/The Broken Hero/Screenshot 2026-04-15 152759.png', alt: 'TBH scene 1' },
+        { src: '../PortfolioPieces/The Broken Hero/Screenshot 2026-04-15 152830.png', alt: 'TBH scene 2' },
+        { src: '../PortfolioPieces/The Broken Hero/Screenshot 2026-04-15 152855.png', alt: 'TBH scene 3' },
+        { src: '../PortfolioPieces/The Broken Hero/Screenshot 2026-04-15 152916.png', alt: 'TBH scene 4' }
       ]
     },
 
