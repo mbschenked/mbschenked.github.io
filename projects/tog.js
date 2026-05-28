@@ -77,7 +77,7 @@ window.PROJECTS.tog = {
               '<li><span class="bullet-lead">Combo Themes:</span> Each combo has a <strong>distinct movement, timing, and attack identity</strong>. Variations in rhythm, trajectory, spacing, and delays <strong>improve readability while maintaining combat variety</strong>.</li>' +
               '<li><span class="bullet-lead">Telegraph Windows:</span> Longer combo structures contain <strong>intentional telegraph, recovery, and transition windows</strong>, giving <strong>players time to</strong> recognize boss actions and <strong>prepare a response</strong>.</li>' +
               '<li><span class="bullet-lead">Weakness Variety:</span> Some enemy combos create <strong>large punish opportunities</strong>, while others <strong>sustain pressure</strong> with <strong>many small opportunities to interrupt</strong> and, deal significant posture damage.</li>' +
-              '<li><span class="bullet-lead">Attack Transitions:</span> Most attacks and combos have multiple opening actions prior to the main attacks. This allows for the boss to choose actions that make the main attacks feel natural. This has also been applied to exiting attacks.</li>' +
+              '<li><span class="bullet-lead">Attack Transitions:</span> <strong>Most attacks</strong> and combos have <strong>multiple opening actions</strong> prior to the main attacks. This allows for the boss to choose actions that make the <strong>main attacks feel natural</strong>. This has also been applied to exiting attacks.</li>' +
             '</ul>',
           media: [
             {
@@ -103,12 +103,6 @@ window.PROJECTS.tog = {
               src: './PortfolioPieces/ThreadsOfGod/clips/combo-break-out.mp4',
               poster: './PortfolioPieces/ThreadsOfGod/clips/combo-break-out-poster.jpg',
               caption: 'Mid-Combo Break Out'
-            },
-            {
-              kind: 'video',
-              src: './PortfolioPieces/ThreadsOfGod/clips/main-combo-thrust.mp4',
-              poster: './PortfolioPieces/ThreadsOfGod/clips/main-combo-thrust-poster.jpg',
-              caption: 'Main Combo + Thrust'
             }
           ]
         },
@@ -150,11 +144,11 @@ window.PROJECTS.tog = {
                 '<line x1="120" y1="320" x2="120" y2="338" class="arrow" marker-end="url(#arrLcTree)"/>' +
                 '<line x1="360" y1="320" x2="360" y2="338" class="arrow" marker-end="url(#arrLcTree)"/>' +
                 '<line x1="600" y1="320" x2="600" y2="338" class="arrow" marker-end="url(#arrLcTree)"/>' +
-                '<text x="120" y="354" text-anchor="middle" class="label">CAUGHT</text>' +
+                '<text x="120" y="354" text-anchor="middle" class="label">HIT</text>' +
                 '<text x="360" y="354" text-anchor="middle" class="label">DEFLECT LAYERING</text>' +
                 '<text x="600" y="354" text-anchor="middle" class="label">TRIPLE DODGE</text>' +
                 '<rect x="20" y="368" width="200" height="138" rx="6" class="box"/>' +
-                '<text x="120" y="524" text-anchor="middle" class="text-sm">dodge → caught</text>' +
+                '<text x="120" y="524" text-anchor="middle" class="text-sm">dodge → hit</text>' +
                 '<rect x="260" y="368" width="200" height="138" rx="6" class="box"/>' +
                 '<text x="360" y="524" text-anchor="middle" class="text-sm">dodge → deflect layering</text>' +
                 '<rect x="500" y="368" width="200" height="138" rx="6" class="box"/>' +
@@ -269,9 +263,9 @@ window.PROJECTS.tog = {
             '<div class="proj-eyebrow">// 04 — Probability Architecture</div>' +
             '<p class="lead">The boss has to <strong>behave intelligently, not as a memorizable pattern</strong>, so every exchange reshapes which action he picks next.</p>' +
             '<ul class="tog-runtime-rules">' +
-              '<li>Each attack lives in a competing branch; when the boss reaches for one, it <strong>rolls a weighted random across the branch’s current point distribution</strong>.</li>' +
-              '<li>Every attack passed over gains points, so <strong>the longer it sits unused, the higher its chance of being picked next</strong>.</li>' +
-              '<li>On fire, the chosen attack’s points reset to zero and a separate cooldown task locks it out, so <strong>the same move never fires twice in a row</strong>.</li>' +
+              '<li>Each attack lives in a competing branch; when action is chosen, the chance it occurs are its total points divided by the sum of the entire branch.</li>' +
+              '<li>Every unchosen actions gains points, chosen actions points are set to zero ensuring it cannot be chosen for at least one turn.</li>' +
+              '<li>The longer a action isnt chosen, the larger the chance it will be chosen, ensuring the likelyhood that it will occur soon.</li>' +
               '<li>A per-attack effectiveness modifier (clamped 0.7–1.3) <strong>climbs on hit, drops on miss/block, holds on deflect</strong>, so the boss leans into what’s working.</li>' +
             '</ul>' +
 
@@ -392,13 +386,13 @@ window.PROJECTS.tog = {
             'A deflect leaves the modifier untouched: <strong>the player executed at the highest level, and the system doesn’t penalize the boss for it</strong>. ' +
             'Blocks and misses pull the modifier down, so <strong>attacks that aren’t connecting accumulate slower and naturally fall back in the distribution</strong>.</p>' +
 
-            '<p><strong>The system only runs on the combat tree.</strong> Narrative attacks — phase openers and crescendo moments that define the fight’s emotional arc — are <strong>hard-coded to fire reliably</strong>. ' +
+            '<p><strong>The system only runs on the combat tree.</strong> Thematic actions and crescendo moments that define the fight’s emotional arc, are <strong>hard-coded to fire reliably</strong>. ' +
             'The defensive tree carries no point system at all: <strong>those exchanges need to feel like the player is barely surviving</strong>, and a weighted distribution would undercut that pressure.</p>' +
 
             '<p>Where the system has the most impact is on <strong>ranged attacks and gap-closers</strong>. ' +
-            'As the distribution shifts, the fight’s rhythm changes — <strong>trading close-quarters pressure for a cat-and-mouse dynamic</strong> of weaving through ranged attacks to find an opening on an unguarded enemy. <strong>The same boss, a different fight.</strong></p>' +
+            'As the distribution shifts, the fight’s rhythm changes, <strong>trading close-quarters pressure for a cat-and-mouse dynamic</strong> of weaving through ranged attacks to find an opening on an unguarded enemy. <strong>The same boss, a different fight.</strong></p>' +
 
-            '<p class="footnote">// System architected in BPC_Attacks_TOG — full implementation scoped for a future build.</p>'
+            '<p class="footnote">// System architected in BPC_Attacks_TOG, full implementation scoped for a future build.</p>'
         }
       ]
     },

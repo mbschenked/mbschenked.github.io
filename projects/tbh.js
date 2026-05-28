@@ -45,10 +45,10 @@ window.PROJECTS.tbh = {
       lead:
         '<p>A <strong>single-player 3D fixed-camera puzzle-platformer</strong> — a Greek soldier reborn from an ancient fresco, ' +
         'navigating a collapsing temple while <strong>switching between the physical 3D world and 2D fresco spaces</strong>, ' +
-        'where the player character becomes a moving illustration.</p>',
-      focuses:
+        'where the player character becomes a moving illustration.</p>' +
         '<p>Worked as <strong>gameplay programmer</strong> on a <strong>3D ↔ 2D world-switching mechanic</strong> that drives both narrative and movement rules through a single transition. ' +
         'Built the <strong>runtime-tunable camera architecture</strong> (CameraManager, CinemachineSwitcher) and composed setpiece cinematics for the temple\'s major story beats.</p>',
+      takeawaysInline: true,
       meta: ['Unity', 'C#', '6-Person Team', 'Cinemachine', 'Gameplay Programmer'],
       cta: { label: 'Play on itch.io', href: 'https://vfs-gdpg.itch.io/the-broken-hero', cls: 'btn-tbh' }
     },
