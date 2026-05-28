@@ -77,7 +77,7 @@ window.PROJECTS.tog = {
               '<li><span class="bullet-lead">Combo Themes:</span> Each combo has a <strong>distinct movement, timing, and attack identity</strong>. Variations in rhythm, trajectory, spacing, and delays <strong>improve readability while maintaining combat variety</strong>.</li>' +
               '<li><span class="bullet-lead">Telegraph Windows:</span> Longer combo structures contain <strong>intentional telegraph, recovery, and transition windows</strong>, giving <strong>players time to</strong> recognize boss actions and <strong>prepare a response</strong>.</li>' +
               '<li><span class="bullet-lead">Weakness Variety:</span> Some enemy combos create <strong>large punish opportunities</strong>, while others <strong>sustain pressure</strong> with <strong>many small opportunities to interrupt</strong> and, deal significant posture damage.</li>' +
-              '<li><span class="bullet-lead">Attack Transitions:</span> <strong>Most attacks</strong> and combos have <strong>multiple opening actions</strong> prior to the main attacks. This allows for the boss to choose actions that make the <strong>main attacks feel natural</strong>. This has also been applied to exiting attacks.</li>' +
+              '<li><span class="bullet-lead">Attack Transitions:</span> <strong>Most attacks</strong> and combos have <strong>multiple opening actions</strong> prior to the main attacks. This allows the boss to choose actions that make the <strong>main attacks feel natural</strong>. This has also been applied to exiting attacks.</li>' +
             '</ul>',
           media: [
             {
@@ -94,9 +94,9 @@ window.PROJECTS.tog = {
             },
             {
               kind: 'video',
-              src: './PortfolioPieces/ThreadsOfGod/clips/main-combo.mp4',
-              poster: './PortfolioPieces/ThreadsOfGod/clips/main-combo-poster.jpg',
-              caption: 'Main Combo (Standard)'
+              src: './PortfolioPieces/ThreadsOfGod/clips/main-combo-thrust.mp4',
+              poster: './PortfolioPieces/ThreadsOfGod/clips/main-combo-thrust-poster.jpg',
+              caption: 'Main Combo + Thrust'
             },
             {
               kind: 'video',
@@ -263,9 +263,9 @@ window.PROJECTS.tog = {
             '<div class="proj-eyebrow">// 04 — Probability Architecture</div>' +
             '<p class="lead">The boss has to <strong>behave intelligently, not as a memorizable pattern</strong>, so every exchange reshapes which action he picks next.</p>' +
             '<ul class="tog-runtime-rules">' +
-              '<li>Each attack lives in a competing branch; when action is chosen, the chance it occurs are its total points divided by the sum of the entire branch.</li>' +
-              '<li>Every unchosen actions gains points, chosen actions points are set to zero ensuring it cannot be chosen for at least one turn.</li>' +
-              '<li>The longer a action isnt chosen, the larger the chance it will be chosen, ensuring the likelyhood that it will occur soon.</li>' +
+              '<li>Each attack lives in a competing branch; when an action is chosen, the chance of it occurring is its total points divided by the sum of the entire branch.</li>' +
+              '<li>Every unchosen action gains points; the chosen action\'s points are set to zero, ensuring it cannot be chosen for at least one turn.</li>' +
+              '<li>The longer an action isn\'t chosen, the larger the chance it will be chosen, ensuring the likelihood that it will occur soon.</li>' +
               '<li>A per-attack effectiveness modifier (clamped 0.7–1.3) <strong>climbs on hit, drops on miss/block, holds on deflect</strong>, so the boss leans into what’s working.</li>' +
             '</ul>' +
 
@@ -386,7 +386,7 @@ window.PROJECTS.tog = {
             'A deflect leaves the modifier untouched: <strong>the player executed at the highest level, and the system doesn’t penalize the boss for it</strong>. ' +
             'Blocks and misses pull the modifier down, so <strong>attacks that aren’t connecting accumulate slower and naturally fall back in the distribution</strong>.</p>' +
 
-            '<p><strong>The system only runs on the combat tree.</strong> Thematic actions and crescendo moments that define the fight’s emotional arc, are <strong>hard-coded to fire reliably</strong>. ' +
+            '<p><strong>The system only runs on the combat tree.</strong> Thematic actions and crescendo moments that define the fight’s emotional arc are <strong>hard-coded to fire reliably</strong>. ' +
             'The defensive tree carries no point system at all: <strong>those exchanges need to feel like the player is barely surviving</strong>, and a weighted distribution would undercut that pressure.</p>' +
 
             '<p>Where the system has the most impact is on <strong>ranged attacks and gap-closers</strong>. ' +
