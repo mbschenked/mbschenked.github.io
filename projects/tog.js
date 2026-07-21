@@ -19,7 +19,7 @@ window.PROJECTS.tog = {
     "<span class=\"bullet-lead\">350+ custom blueprint functions written</span>, spanning 9-directional movement and physics, so the boss's attacks and positioning feel like they're responding to the player.",
     '<span class="bullet-lead">70+ enemy actions routed</span> through a memory-mimicking behavior tree, producing non-repetitive boss behavior.',
     '<span class="bullet-lead">20+ playtests conducted</span>, tuning boss behavior and addressing player annoyances based on feedback data, <span class="bullet-lead">increasing player retention by 20%</span>.',
-    '<span class="bullet-lead">Now being remade</span> using the Gameplay Ability System (GAS).'
+    '<span class="bullet-lead">Now being remade</span> using the <span class="bullet-lead">Gameplay Ability System (GAS)</span>.'
   ],
   hero: {
     src: '../PortfolioPieces/ThreadsOfGod/clips/tog-hero-loop.mp4',
