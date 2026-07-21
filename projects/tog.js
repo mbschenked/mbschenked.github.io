@@ -18,7 +18,7 @@ window.PROJECTS.tog = {
     '<span class="bullet-lead">100+ attacks designed</span>, edited, implemented, and tested, improving boss readability and combat balance.',
     "<span class=\"bullet-lead\">350+ custom blueprint functions written</span>, spanning 9-directional movement and physics, so the boss's attacks and positioning feel like they're responding to the player.",
     '<span class="bullet-lead">70+ enemy actions routed</span> through a memory-mimicking behavior tree, producing non-repetitive boss behavior.',
-    '<span class="bullet-lead">20+ playtests conducted</span>, tuning boss behavior and addressing player annoyances based on feedback data, <span class="bullet-lead">increasing player retention by 40%</span>.'
+    '<span class="bullet-lead">20+ playtests conducted</span>, tuning boss behavior and addressing player annoyances based on feedback data, <span class="bullet-lead">increasing player retention by 20%</span>.'
   ],
   hero: {
     src: '../PortfolioPieces/ThreadsOfGod/clips/tog-hero-loop.mp4',
@@ -499,7 +499,7 @@ window.PROJECTS.tog = {
               '<div class="system-card">' +
                 '<span class="sys-icon">🏃</span>' +
                 '<h4>Locomotion System</h4>' +
-                '<p><strong>8-directional state machine</strong> driven by speed, angle, and weapon stance. Covers guard strafe, aim locomotion, and multi-tier landings — <strong>blended with orientation warping and procedural foot IK</strong>.</p>' +
+                '<p><strong>8-directional state machine</strong> driven by speed, angle, and weapon stance. Covers guard strafe, aim locomotion, and multi-tier landings — <strong>blended with motion matching, orientation warping, and procedural foot IK</strong>.</p>' +
               '</div>' +
             '</div>'
         }
