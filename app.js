@@ -1,7 +1,7 @@
 /* =========================================================================
    Portfolio-0.2 — router + render engine (v2 scroll-spy layout)
    Vanilla JS, no build step. Hash routing:
-     #tog | #tbh   → project page (all sections rendered, scroll-based nav)
+     #tog | #tbh | #ai → project page (all sections rendered, scroll-based nav)
      #bio          → about page
    Empty / unknown hash → falls back to #tog.
 
@@ -14,7 +14,7 @@
   // ── Constants ────────────────────────────────────────────────────────────
   var DEFAULT_LVL = 'tog';
   var MOBILE_BREAKPOINT = 900;
-  var PROJECT_ORDER = ['tog', 'tbh'];
+  var PROJECT_ORDER = ['tog', 'tbh', 'ai'];
 
   // Placeholder hero asset — Phase B will surface real candidates.
   var PLACEHOLDER_HERO = {
@@ -43,6 +43,10 @@
       '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
       '<title>C#</title>' +
       '<path fill="currentColor" d="M1.194 7.543v8.913c0 1.103.588 2.122 1.544 2.674l7.718 4.456a3.086 3.086 0 0 0 3.088 0l7.718-4.456a3.087 3.087 0 0 0 1.544-2.674V7.543a3.084 3.084 0 0 0-1.544-2.673L13.544.414a3.086 3.086 0 0 0-3.088 0L2.738 4.87a3.085 3.085 0 0 0-1.544 2.673Zm5.403 2.914v3.087a.77.77 0 0 0 .772.772.773.773 0 0 0 .772-.772.773.773 0 0 1 1.317-.546.775.775 0 0 1 .226.546 2.314 2.314 0 1 1-4.631 0v-3.087c0-.615.244-1.203.679-1.637a2.312 2.312 0 0 1 3.274 0c.434.434.678 1.023.678 1.637a.769.769 0 0 1-.226.545.767.767 0 0 1-1.091 0 .77.77 0 0 1-.226-.545.77.77 0 0 0-.772-.772.771.771 0 0 0-.772.772Zm12.35 3.087a.77.77 0 0 1-.772.772h-.772v.772a.773.773 0 0 1-1.544 0v-.772h-1.544v.772a.773.773 0 0 1-1.317.546.775.775 0 0 1-.226-.546v-.772H12a.771.771 0 1 1 0-1.544h.772v-1.543H12a.77.77 0 1 1 0-1.544h.772v-.772a.773.773 0 0 1 1.317-.546.775.775 0 0 1 .226.546v.772h1.544v-.772a.773.773 0 0 1 1.544 0v.772h.772a.772.772 0 0 1 0 1.544h-.772v1.543h.772a.776.776 0 0 1 .772.772Zm-3.088-2.315h-1.544v1.543h1.544v-1.543Z"/></svg>',
+    'Python':
+      '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<title>Python</title>' +
+      '<path fill="currentColor" d="M14.25.18l.9.2.73.26.59.3.45.32.34.34.25.34.16.33.1.3.04.26.02.2-.01.13V8.5l-.05.63-.13.55-.21.46-.26.38-.3.31-.33.25-.35.19-.35.14-.33.1-.3.07-.26.04-.21.02H8.77l-.69.05-.59.14-.5.22-.41.27-.33.32-.27.35-.2.36-.15.37-.1.35-.07.32-.04.27-.02.21v3.06H3.17l-.21-.03-.28-.07-.32-.12-.35-.18-.36-.26-.36-.36-.35-.46-.32-.59-.28-.73-.21-.88-.14-1.05-.05-1.23.06-1.22.16-1.04.24-.87.32-.71.36-.57.4-.44.42-.33.42-.24.4-.16.36-.1.32-.05.24-.01h.16l.06.01h8.16v-.83H6.18l-.01-2.75-.02-.37.05-.34.11-.31.17-.28.25-.26.31-.23.38-.2.44-.18.51-.15.58-.12.64-.1.71-.06.77-.04.84-.02 1.27.05zm-6.3 1.98l-.23.33-.08.41.08.41.23.34.33.22.41.09.41-.09.33-.22.23-.34.08-.41-.08-.41-.23-.33-.33-.22-.41-.09-.41.09zm13.09 3.95l.28.06.32.12.35.18.36.27.36.35.35.47.32.59.28.73.21.88.14 1.04.05 1.23-.06 1.23-.16 1.04-.24.86-.32.71-.36.57-.4.45-.42.33-.42.24-.4.16-.36.09-.32.05-.24.02-.16-.01h-8.22v.82h5.84l.01 2.76.02.36-.05.34-.11.31-.17.29-.25.25-.31.24-.38.2-.44.17-.51.15-.58.13-.64.09-.71.07-.77.04-.84.01-1.27-.04-1.07-.14-.9-.2-.73-.25-.59-.3-.45-.33-.34-.34-.25-.34-.16-.33-.1-.3-.04-.25-.02-.2.01-.13v-5.34l.05-.64.13-.54.21-.46.26-.38.3-.32.33-.24.35-.2.35-.14.33-.1.3-.06.26-.04.21-.02.13-.01h5.84l.69-.05.59-.14.5-.21.41-.28.33-.32.27-.35.2-.36.15-.36.1-.35.07-.32.04-.28.02-.21V6.07h2.09l.14.01zm-6.47 14.25l-.23.33-.08.41.08.41.23.33.33.23.41.08.41-.08.33-.23.23-.33.08-.41-.08-.41-.23-.33-.33-.23-.41-.08-.41.08z"/></svg>',
     'Cascadeur':
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
       '<title>Cascadeur</title>' +
@@ -71,7 +75,40 @@
       '<title>HacknPlan</title>' +
       '<path d="M12 2 3 7v10l9 5 9-5V7l-9-5z"/>' +
       '<path stroke-width="1.3" d="M12 8 6.5 11v6L12 20l5.5-3v-6z"/>' +
-      '<path stroke-width="1.3" d="M12 8v6L6.5 11M12 14l5.5-3"/></svg>'
+      '<path stroke-width="1.3" d="M12 8v6L6.5 11M12 14l5.5-3"/></svg>',
+    'Electron':
+      '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<title>Electron</title>' +
+      '<path fill="currentColor" d="M12.0111 0c-.85 0-1.5392.6891-1.5392 1.5392 0 .8501.6891 1.5393 1.5392 1.5393.595 0 1.11-.338 1.3662-.832 2.2208 1.2675 3.847 5.4728 3.847 10.3623 0 2.0715-.2891 4.056-.825 5.7685a.3215.3215 0 0 0 .2107.403.322.322 0 0 0 .4033-.2111c.5558-1.7763.8542-3.8251.8542-5.9604 0-5.1927-1.7717-9.686-4.3206-11.0027.001-.0223.0035-.0443.0035-.0669 0-.85-.6891-1.5392-1.5393-1.5392zm0 .6432a.896.896 0 1 1 0 1.792.896.896 0 1 1 0-1.792zm-5.486 4.3052c-2.067.0074-3.6473.6646-4.3885 1.9485-.7375 1.2774-.5267 2.971.5113 4.7813a.3217.3217 0 0 0 .558-.32C2.271 9.7274 2.089 8.266 2.6938 7.2185c.821-1.422 3.033-1.9552 5.9321-1.4271a.3216.3216 0 0 0 .1153-.6329c-.784-.1428-1.5271-.2125-2.216-.21zm11.0522.0176a.3216.3216 0 0 0-.0084.6432c1.8337.0239 3.1556.5956 3.7502 1.6256.8192 1.419.1798 3.5947-1.7182 5.837a.322.322 0 0 0 .0377.4535.3215.3215 0 0 0 .4532-.0377c2.0535-2.426 2.7708-4.8661 1.7845-6.5744-.7257-1.257-2.26-1.9207-4.299-1.9472zm-2.6984.2924a.3225.3225 0 0 0-.0647.0072c-1.8568.3979-3.8333 1.1755-5.7314 2.2714-4.5699 2.6384-7.5924 6.4948-7.3601 9.3717-.4726.2628-.7928.7664-.7928 1.3455 0 .85.6892 1.5392 1.5393 1.5392.85 0 1.5392-.6891 1.5392-1.5392 0-.8501-.6891-1.5393-1.5392-1.5393-.038 0-.0754.003-.1128.0057-.1002-2.5597 2.7434-6.1412 7.048-8.6265 1.8413-1.063 3.7551-1.8163 5.5445-2.1997a.3217.3217 0 0 0-.07-.636zm-2.8787 6.2364a1.1192 1.1192 0 0 0-.2243.0255c-.6012.1301-.983.7225-.8533 1.3238.1302.6012.7226.9832 1.3238.8533.6012-.1302.9832-.7226.8533-1.3238-.1139-.526-.5816-.8844-1.0995-.8788zM4.532 13.341a.321.321 0 0 0-.2318.0835.3214.3214 0 0 0-.0214.4542c1.2682 1.3936 2.9157 2.701 4.7946 3.7857 4.4146 2.5489 9.1056 3.2849 11.5608 1.8392a1.53 1.53 0 0 0 .8966.2899c.8501 0 1.5392-.6891 1.5392-1.5392 0-.8501-.689-1.5393-1.5392-1.5393-.85 0-1.5392.6892-1.5392 1.5393 0 .276.0737.5344.201.7584-2.2448 1.214-6.631.5002-10.7976-1.9054-1.8228-1.0524-3.418-2.3181-4.6404-3.6614a.3206.3206 0 0 0-.2226-.1049zm-2.0628 4.0172a.896.896 0 1 1 0 1.792.896.896 0 1 1 0-1.792zm19.0616 0a.896.896 0 1 1 0 1.792.891.891 0 0 1-.5864-.2194c-.0025-.004-.0039-.0083-.0066-.0123a.3195.3195 0 0 0-.0957-.0914.896.896 0 0 1 .6887-1.4689zm-14.0045 1.368a.3215.3215 0 0 0-.3207.4296C8.2793 22.154 10.036 24 12.0111 24c1.4406 0 2.7735-.9822 3.8128-2.711a.3215.3215 0 0 0-.11-.4413.3219.3219 0 0 0-.4415.11c-.934 1.5537-2.0812 2.399-3.2613 2.399-1.6407 0-3.2075-1.6465-4.2-4.4179a.3216.3216 0 0 0-.2848-.2126z"/></svg>',
+    // No simple-icons entry for Claude Code — hand-drawn terminal glyph
+    // (rounded window + ">_" prompt), stroke-based like Cascadeur/HacknPlan
+    // above so it stays legible at the sidebar's ~20px render size.
+    'Claude Code':
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<title>Claude Code</title>' +
+      '<rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/>' +
+      '<path d="M7 10.2l2.9 2.4L7 15"/>' +
+      '<path d="M12.6 15h4.6"/></svg>',
+    // No brand icon exists for Supabrain (personal project) — hand-drawn
+    // database-cylinder + lightning bolt, stroke-based like Claude Code above.
+    'Supabrain':
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<title>Supabrain</title>' +
+      '<ellipse cx="12" cy="5" rx="8" ry="2.8"/>' +
+      '<path d="M4 5v14c0 1.55 3.58 2.8 8 2.8s8-1.25 8-2.8V5"/>' +
+      '<path d="M13.6 8.5 9.8 13h4.4l-3.8 4.5"/></svg>',
+    'GitHub':
+      '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<title>GitHub</title>' +
+      '<path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>',
+    'Linear':
+      '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<title>Linear</title>' +
+      '<path fill="currentColor" d="M2.886 4.18A11.982 11.982 0 0 1 11.99 0C18.624 0 24 5.376 24 12.009c0 3.64-1.62 6.903-4.18 9.105L2.887 4.18ZM1.817 5.626l16.556 16.556c-.524.33-1.075.62-1.65.866L.951 7.277c.247-.575.537-1.126.866-1.65ZM.322 9.163l14.515 14.515c-.71.172-1.443.282-2.195.322L0 11.358a12 12 0 0 1 .322-2.195Zm-.17 4.862 9.823 9.824a12.02 12.02 0 0 1-9.824-9.824Z"/></svg>',
+    'Blender':
+      '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<title>Blender</title>' +
+      '<path fill="currentColor" d="M12.51 13.214c.046-.8.438-1.506 1.03-2.006a3.424 3.424 0 0 1 2.212-.79c.85 0 1.631.3 2.211.79.592.5.983 1.206 1.028 2.005.045.823-.285 1.586-.865 2.153a3.389 3.389 0 0 1-2.374.938 3.393 3.393 0 0 1-2.376-.938c-.58-.567-.91-1.33-.865-2.152M7.35 14.831c.006.314.106.922.256 1.398a7.372 7.372 0 0 0 1.593 2.757 8.227 8.227 0 0 0 2.787 2.001 8.947 8.947 0 0 0 3.66.76 8.964 8.964 0 0 0 3.657-.772 8.285 8.285 0 0 0 2.785-2.01 7.428 7.428 0 0 0 1.592-2.762 6.964 6.964 0 0 0 .25-3.074 7.123 7.123 0 0 0-1.016-2.779 7.764 7.764 0 0 0-1.852-2.043h.002L13.566 2.55l-.02-.015c-.492-.378-1.319-.376-1.86.002-.547.382-.609 1.015-.123 1.415l-.001.001 3.126 2.543-9.53.01h-.013c-.788.001-1.545.518-1.695 1.172-.154.665.38 1.217 1.2 1.22V8.9l4.83-.01-8.62 6.617-.034.025c-.813.622-1.075 1.658-.563 2.313.52.667 1.625.668 2.447.004L7.414 14s-.069.52-.063.831zm12.09 1.741c-.97.988-2.326 1.548-3.795 1.55-1.47.004-2.827-.552-3.797-1.538a4.51 4.51 0 0 1-1.036-1.622 4.282 4.282 0 0 1 .282-3.519 4.702 4.702 0 0 1 1.153-1.371c.942-.768 2.141-1.183 3.396-1.185 1.256-.002 2.455.41 3.398 1.175.48.391.87.854 1.152 1.367a4.28 4.28 0 0 1 .522 1.706 4.236 4.236 0 0 1-.239 1.811 4.54 4.54 0 0 1-1.035 1.626"/></svg>'
   };
 
   // Sidebar ASCII icon — one locked glyph per block label. Single coherent
@@ -147,9 +184,19 @@
     if (!window.PROJECTS) return null;
     return window.PROJECTS[lvl] || null;
   }
+  // Next project in PROJECT_ORDER, wrapping at the end — tog → tbh → ai → tog.
+  // Index-based rotation rather than "first slug that isn't the current one",
+  // so every project gets a distinct neighbor once there are more than two.
+  // Unknown slugs start the walk at index 0; missing/unregistered projects are
+  // skipped, and a lone registered project yields null (no footer link).
   function otherProjectSlug(lvl) {
-    for (var i = 0; i < PROJECT_ORDER.length; i++) {
-      if (PROJECT_ORDER[i] !== lvl && getProject(PROJECT_ORDER[i])) return PROJECT_ORDER[i];
+    var n = PROJECT_ORDER.length;
+    if (!n) return null;
+    var start = PROJECT_ORDER.indexOf(lvl);
+    if (start === -1) start = n - 1; // unknown current → next is PROJECT_ORDER[0]
+    for (var step = 1; step <= n; step++) {
+      var slug = PROJECT_ORDER[(start + step) % n];
+      if (slug !== lvl && getProject(slug)) return slug;
     }
     return null;
   }
@@ -232,7 +279,7 @@
     contentMount.innerHTML = '';
 
     heroMount.setAttribute('data-accent', p.accent || 'amber');
-    document.body.classList.remove('is-accent-amber', 'is-accent-tbh');
+    document.body.classList.remove('is-accent-amber', 'is-accent-tbh', 'is-accent-green');
     document.body.classList.add('is-accent-' + (p.accent || 'amber'));
     heroMount.appendChild(renderHero(p));
 
@@ -917,12 +964,15 @@
 
   // ── Project outro — celebratory end-of-read CTA + contact + sign-off ─────
   // Rendered after all sections, before the next-project footer. Shared
-  // content across both projects; accent color flows through via parent
-  // [data-accent] so amber/tbh both work without per-project data. Heading
+  // content across every project; accent color flows through via parent
+  // [data-accent] so amber/tbh/green all work without per-project data. Heading
   // glow + spark twinkle only run once .visible is set by the fade-up
   // observer, so the celebration triggers on scroll-into-view.
   function renderProjectOutro(p) {
-    var primaryBtnCls = (p.accent === 'tbh') ? 'btn-tbh' : 'btn-amber';
+    var primaryBtnCls =
+      (p.accent === 'tbh')   ? 'btn-tbh' :
+      (p.accent === 'green') ? 'btn-green' :
+                               'btn-amber';
     var outro = el('section', { class: 'proj-outro fade-up', 'aria-label': 'End of project — contact' });
 
     var headline = el('div', { class: 'proj-outro__headline' });
@@ -957,8 +1007,10 @@
   }
 
   // ── Next-project footer ──────────────────────────────────────────────────
-  // With exactly two projects, prev and next would both point at the same
-  // neighbor — render only the "Next Project →" link.
+  // Single "Next Project →" link, pointing at the next slug in PROJECT_ORDER
+  // (wrapping at the end). The layout stays single-link by choice: the tile
+  // grid above already offers direct access to every project, so a prev/next
+  // pair would just duplicate it.
   function renderProjectFooter(activeLvl) {
     var other = otherProjectSlug(activeLvl);
     if (!other) return null;
@@ -1130,7 +1182,9 @@
     sidebarMount.innerHTML = '';
     sidebarMount.setAttribute('data-accent', 'amber');
     heroMount.setAttribute('data-accent', 'amber');
-    document.body.classList.remove('is-accent-tbh');
+    // Clear every project accent, not just tbh — otherwise #ai → #bio leaves
+    // the green body wash behind while the rest of the page renders amber.
+    document.body.classList.remove('is-accent-amber', 'is-accent-tbh', 'is-accent-green');
     document.body.classList.add('is-accent-amber');
 
     var data = window.ABOUT || {};

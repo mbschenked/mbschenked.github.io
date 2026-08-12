@@ -24,6 +24,7 @@
 
   --green:        #42c47a;
   --green-dim:    rgba(66,196,122,0.09);
+  --green-border: rgba(66,196,122,0.25);
 
   --text:         #adb1c4;
   --text-bright:  #d4d8e8;
@@ -88,6 +89,19 @@ body.is-accent-tbh::before {
       90deg,
       rgba(201, 119, 58, 0.30) 0%,
       rgba(201, 119, 58, 0.14) 22%,
+      rgba(7, 8, 12, 0)        48%,
+      rgba(46, 184, 204, 0.10) 76%,
+      rgba(46, 184, 204, 0.22) 100%
+    );
+}
+/* AI route swaps the warm side for the green accent. Same stop positions and
+   alpha ramp as the TBH wash — only the left-hand hue changes. */
+body.is-accent-green::before {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(66, 196, 122, 0.30) 0%,
+      rgba(66, 196, 122, 0.14) 22%,
       rgba(7, 8, 12, 0)        48%,
       rgba(46, 184, 204, 0.10) 76%,
       rgba(46, 184, 204, 0.22) 100%
@@ -218,6 +232,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 [data-accent="amber"] .side__project-sub { color: var(--amber-bright); }
 [data-accent="tbh"]   .side__project-sub { color: var(--tbh); }
+[data-accent="green"] .side__project-sub { color: var(--green); }
 
 /* Tighten subtitle's bottom gap when the Timeline pill sits directly below it,
    so they read as a paired identifier block rather than two separate stanzas. */
@@ -277,6 +292,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   min-width: 3.2em;
 }
 [data-accent="tbh"] .side__icon { color: var(--tbh); }
+[data-accent="green"] .side__icon { color: var(--green); }
 
 .side__toc {
   list-style: none;
@@ -365,6 +381,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   transform: translateY(-1px);
 }
 [data-accent="tbh"] .side__tool-icon:hover { color: var(--tbh); }
+[data-accent="green"] .side__tool-icon:hover { color: var(--green); }
 
 /* Hover tooltip — shows the tool name above the icon. */
 .side__tool-icon::after {
@@ -406,12 +423,15 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   font-size: 0.7rem;
 }
 [data-accent="tbh"] .side__takeaways li::before { color: var(--tbh); }
+[data-accent="green"] .side__takeaways li::before { color: var(--green); }
 /* Bolded leading-phrase claim inside takeaway bullets — matches past-portfolio
    convention (.bullet-lead { color: --amber-bright; font-weight: 700 }) but
    scoped to .side__takeaways so the body-prose .bullet-lead rule in Combat
-   Puzzle / Fight Pacing is unaffected. Accent-swaps to terracotta on TBH. */
+   Puzzle / Fight Pacing is unaffected. Accent-swaps to terracotta on TBH,
+   green on the AI project. */
 .side__takeaways .bullet-lead { color: var(--amber-bright); font-weight: 700; }
 [data-accent="tbh"] .side__takeaways .bullet-lead { color: var(--tbh); }
+[data-accent="green"] .side__takeaways .bullet-lead { color: var(--green); }
 
 .side__project-link {
   color: var(--text-bright);
@@ -477,6 +497,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   gap: 1px;
 }
 [data-accent="tbh"] .hero-scroll-indicator { color: var(--tbh); }
+[data-accent="green"] .hero-scroll-indicator { color: var(--green); }
 .hero-scroll-indicator.is-faded { opacity: 0; }
 .hero-scroll-indicator .hsi-tri {
   display: block;
@@ -533,6 +554,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   color: var(--amber-bright);
 }
 [data-accent="tbh"] .pillar-num { color: var(--tbh); }
+[data-accent="green"] .pillar-num { color: var(--green); }
 .pillar-title {
   font-family: var(--font-display);
   font-weight: 700;
@@ -675,14 +697,28 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   color: var(--muted);
   margin: 0 0 1rem 0;
 }
+/* Tiles are ALWAYS side by side — never wrap to a second row (Max, 2026-08-11).
+   Tiles first shrink evenly (down to 200px each) so the full set fits most
+   desktop widths; only when even that overflows does the row swipe-scroll
+   horizontally, with scroll-snap settling tiles cleanly. Scrollbar hidden —
+   the cut-off tile edge is the affordance. */
 .project-tiles__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 320px));
+  display: flex;
+  flex-wrap: nowrap;
   gap: 1rem;
-  justify-content: start;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;              /* Firefox */
+  padding: 3px 0 0.25rem;             /* headroom so hover-lift isn't clipped */
 }
+.project-tiles__grid::-webkit-scrollbar { display: none; }
 .project-tile {
   position: relative;
+  flex: 1 1 0;
+  min-width: 200px;
+  max-width: 320px;
+  scroll-snap-align: start;
   aspect-ratio: 4 / 5;
   overflow: hidden;
   border-radius: 4px;
@@ -756,6 +792,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .project-tile.is-current { outline-color: var(--amber); }
 [data-accent="tbh"] .project-tile.is-current { outline-color: var(--tbh); }
+[data-accent="green"] .project-tile.is-current { outline-color: var(--green); }
 
 /* ── Project footer (Last / Next) ────────────────────────────────────────── */
 .proj-footer {
@@ -811,6 +848,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 [data-accent="amber"] .section-block__num { color: var(--amber-bright); }
 [data-accent="tbh"]   .section-block__num { color: var(--tbh); }
+[data-accent="green"] .section-block__num { color: var(--green); }
 .section-block__title {
   font-family: var(--font-display);
   font-weight: 600;
@@ -877,10 +915,16 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   background: var(--tbh-dim);
   border-color: rgba(201,119,58,0.25);
 }
+/* AI project badge variant — green twin of .badge-tbh-c */
+.badge-green-c {
+  color: var(--green);
+  background: var(--green-dim);
+  border-color: var(--green-border);
+}
 .badge-ship {
   color: var(--green);
   background: var(--green-dim);
-  border-color: rgba(66,196,122,0.25);
+  border-color: var(--green-border);
 }
 .meta-pills {
   display: flex;
@@ -940,6 +984,21 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   outline: 2px solid var(--tbh);
   outline-offset: 3px;
 }
+/* AI project CTA button — green twin of .btn-tbh */
+.btn-green {
+  background: var(--green);
+  /* .btn-tbh hardcodes this same value as #07080c; --bg is identical and
+     keeps the "no hex outside :root" rule intact for new code. */
+  color: var(--bg);
+  border-color: var(--green);
+}
+.btn-green:hover {
+  opacity: 0.88;
+}
+.btn-green:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+}
 /* Outline button — used by secondary CTAs (contact links in the outro). */
 .btn-ghost {
   background: transparent;
@@ -954,12 +1013,19 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   border-color: var(--tbh);
   color: var(--tbh);
 }
+[data-accent="green"] .btn-ghost:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
 .btn-ghost:focus-visible {
   outline: 2px solid var(--amber);
   outline-offset: 3px;
 }
 [data-accent="tbh"] .btn-ghost:focus-visible {
   outline-color: var(--tbh);
+}
+[data-accent="green"] .btn-ghost:focus-visible {
+  outline-color: var(--green);
 }
 
 /* ── Project outro ────────────────────────────────────────────────────────
@@ -1002,6 +1068,13 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   from { text-shadow: 0 0 12px rgba(201, 119, 58, 0.30); }
   to   { text-shadow: 0 0 28px rgba(201, 119, 58, 0.70), 0 0 50px rgba(201, 119, 58, 0.28); }
 }
+[data-accent="green"] .proj-outro.visible .proj-outro__title {
+  animation: proj-outro-glow-green 2.6s ease-in-out infinite alternate;
+}
+@keyframes proj-outro-glow-green {
+  from { text-shadow: 0 0 12px rgba(66, 196, 122, 0.30); }
+  to   { text-shadow: 0 0 28px rgba(66, 196, 122, 0.70), 0 0 50px rgba(66, 196, 122, 0.28); }
+}
 
 .proj-outro__spark {
   font-size: 1.4rem;
@@ -1012,6 +1085,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   transition: opacity 0.7s ease 0.3s, transform 0.7s cubic-bezier(.34, 1.56, .64, 1) 0.3s;
 }
 [data-accent="tbh"] .proj-outro__spark { color: var(--tbh); }
+[data-accent="green"] .proj-outro__spark { color: var(--green); }
 .proj-outro.visible .proj-outro__spark {
   opacity: 1;
   transform: scale(1) rotate(0);
@@ -1062,6 +1136,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   margin-top: 0.2rem;
 }
 [data-accent="tbh"] .sec-header__bigtitle { color: var(--tbh); }
+[data-accent="green"] .sec-header__bigtitle { color: var(--green); }
 .sec-header__subtitle {
   font-family: var(--font-mono);
   font-size: 0.78rem;
@@ -1071,6 +1146,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   margin-top: 0.2rem;
 }
 [data-accent="tbh"] .sec-header__subtitle { color: var(--tbh); }
+[data-accent="green"] .sec-header__subtitle { color: var(--green); }
 .sec-header__body {
   max-width: 56ch;
 }
@@ -1108,6 +1184,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   border-color: var(--tbh);
   color: var(--tbh);
 }
+[data-accent="green"] .sec-header__num {
+  border-color: var(--green);
+  color: var(--green);
+}
 .sec-header__sec-label {
   color: var(--white);
   font-weight: 500;
@@ -1118,6 +1198,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   letter-spacing: 0.1em;
 }
 [data-accent="tbh"] .sec-header__sec-subtitle { color: var(--tbh); }
+[data-accent="green"] .sec-header__sec-subtitle { color: var(--green); }
 
 /* Title row — title+subtitle on the left, autoplaying clip on the right.
    Only activated when section data ships a titleVideo field; falls back to a
@@ -1181,6 +1262,9 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 [data-accent="tbh"] .sec-header__overview-divider {
   background: linear-gradient(180deg, transparent 4%, var(--tbh) 50%, transparent 96%);
 }
+[data-accent="green"] .sec-header__overview-divider {
+  background: linear-gradient(180deg, transparent 4%, var(--green) 50%, transparent 96%);
+}
 .sec-header__overview-col {
   max-width: none;
   font-size: 0.96rem;
@@ -1237,8 +1321,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   font-size: 0.85rem;
 }
 [data-accent="tbh"] .overview-takeaways li::before { color: var(--tbh); }
+[data-accent="green"] .overview-takeaways li::before { color: var(--green); }
 .overview-takeaways .bullet-lead { color: var(--amber-bright); font-weight: 700; }
 [data-accent="tbh"] .overview-takeaways .bullet-lead { color: var(--tbh); }
+[data-accent="green"] .overview-takeaways .bullet-lead { color: var(--green); }
 
 /* ── Media section ───────────────────────────────────────────────────────── */
 .sec-media__frame {
@@ -1932,6 +2018,13 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   padding-top: 0.18rem;
   white-space: nowrap;
 }
+/* .dm-tldr was amber-hardcoded (only TOG used it until #ai) — accent-aware now. */
+[data-accent="green"] .dm-tldr {
+  background: var(--green-dim);
+  border-color: var(--green-border);
+  border-left-color: var(--green);
+}
+[data-accent="green"] .dm-tldr-tag { color: var(--green); }
 .dm-tldr-text {
   font-size: 0.94rem;
   line-height: 1.7;
