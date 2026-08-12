@@ -1923,6 +1923,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   fill: var(--amber-bright);
   font-weight: 600;
 }
+[data-accent="green"] .diag-svg .label { fill: var(--green); }
 .diag-svg .text {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -2684,3 +2685,639 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   text-align: right;
   flex-shrink: 0;
 }
+
+/* ── AI tile art — "Fractured Core" glitch glyph (#ai project tile) ──
+
+   Layer stack, bottom → top:
+     .ait-bg      static green-wash gradient base
+     .ait-grid    circuit grid, slow vertical drift          [idle]
+     .ait-scan    1px scanlines, slow drift                  [idle]
+     .ait-sweep   soft light bar crossing the tile           [idle]
+     .ait-glow    radial bloom behind the glyph, flicker     [idle]
+     .ait-cage    4 clamps the glyph punches through         [hover beat 2]
+     .ait-stack   ├ burst transform owner (scale/jitter)     [hover beat 2]
+       .ait-breathe ├ breathing transform owner              [idle + sustain]
+         .ait-layers  └ main glyph + RGB ghosts + slices
+     .ait-noise   digital noise blocks                       [hover]
+     .ait-frame   containment frame + 4 corner brackets      [hover]
+     .ait-flash   full-bleed hard tick                       [hover beat 1]
+
+   Two transform owners (.ait-stack / .ait-breathe) exist so the burst and the
+   breathing loop never fight over the same `transform` property.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* The wrapper the SPA emits into .project-tile__art. */
+.project-tile__art { position: absolute; inset: 0; z-index: 0; }
+
+.ai-tile-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(120% 92% at 50% 40%, #12261d 0%, #0b1017 52%, #07080c 100%);
+  contain: paint;                 /* keep glitch repaints inside the tile */
+}
+/* The hidden <defs> carrier must never take layout space. */
+.ai-tile-art .ait-defs {
+  position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none;
+}
+.ai-tile-art > .ait-grid,
+.ai-tile-art > .ait-scan,
+.ai-tile-art > .ait-sweep,
+.ai-tile-art > .ait-glow,
+.ai-tile-art > .ait-noise,
+.ai-tile-art > .ait-flash,
+.ai-tile-art > .ait-frame { position: absolute; pointer-events: none; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   IDLE LOOP — "already alive". Everything here is transform/opacity only and
+   runs whether or not the pointer is anywhere near the tile, so amplitudes
+   are deliberately tiny: this sits beside two autoplaying video tiles and
+   must not compete with them.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Circuit grid — 26px cells, drifts exactly one cell per cycle so it loops
+   seamlessly. Over-sized by one cell on each axis to hide the wrap seam. */
+.ai-tile-art .ait-grid {
+  left: -26px; right: -26px; top: -26px; bottom: -26px;
+  background-image:
+    linear-gradient(rgba(66,196,122,0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(66,196,122,0.045) 1px, transparent 1px);
+  background-size: 26px 26px, 26px 26px;
+  -webkit-mask-image: radial-gradient(85% 70% at 50% 42%, #000 0%, rgba(0,0,0,0.35) 62%, transparent 100%);
+          mask-image: radial-gradient(85% 70% at 50% 42%, #000 0%, rgba(0,0,0,0.35) 62%, transparent 100%);
+  animation: ait-grid-drift 14s linear infinite;
+  will-change: transform;
+}
+@keyframes ait-grid-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(0, 26px, 0); }
+}
+
+/* Scanlines — 3px pitch, drifts one pitch per cycle. */
+.ai-tile-art .ait-scan {
+  left: 0; right: 0; top: -6px; bottom: -6px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.048) 0px, rgba(255,255,255,0.048) 1px,
+    rgba(0,0,0,0) 1px, rgba(0,0,0,0) 3px);
+  opacity: 0.75;
+  animation: ait-scan-drift 6s linear infinite;
+  will-change: transform;
+}
+@keyframes ait-scan-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(0, -3px, 0); }
+}
+
+/* Soft light bar crossing top→bottom every 9s. Reads as a CRT refresh pass. */
+.ai-tile-art .ait-sweep {
+  left: 0; right: 0; top: 0; height: 24%;
+  background: linear-gradient(to bottom,
+    rgba(66,196,122,0) 0%,
+    rgba(66,196,122,0.09) 45%,
+    rgba(120,255,190,0.16) 55%,
+    rgba(66,196,122,0) 100%);
+  opacity: 0;
+  animation: ait-sweep 9s cubic-bezier(0.55, 0.05, 0.45, 0.95) infinite;
+  will-change: transform, opacity;
+}
+@keyframes ait-sweep {
+  0%   { transform: translate3d(0, -130%, 0); opacity: 0; }
+  9%   { opacity: 0.55; }
+  74%  { opacity: 0.45; }
+  100% { transform: translate3d(0, 430%, 0); opacity: 0; }
+}
+
+/* Bloom behind the glyph — low-amplitude flicker so the glow never sits still.
+   Opacity + scale only; the actual blur is a baked gradient, not a filter. */
+.ai-tile-art .ait-glow {
+  left: 50%; top: 46%;
+  width: 78%; aspect-ratio: 1 / 1;
+  margin: -39% 0 0 -39%;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(66,196,122,0.34) 0%,
+    rgba(66,196,122,0.13) 38%,
+    rgba(66,196,122,0) 70%);
+  opacity: 0.42;
+  animation: ait-glow-breathe 4.6s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+@keyframes ait-glow-breathe {
+  0%   { opacity: 0.30; transform: scale(0.97); }
+  55%  { opacity: 0.52; transform: scale(1.03); }
+  100% { opacity: 0.40; transform: scale(1.00); }
+}
+
+/* Glyph stack. .ait-stack owns burst transforms; .ait-breathe owns the loop.
+   .ait-cage is a sibling, NOT a child — if it were a child it would inherit
+   the burst scale and the glyph could never overrun it. Both are grid items
+   pinned to the same cell so they stay registered to each other, and both
+   carry the same `margin-bottom` (a % margin resolves against the container's
+   INLINE size on both axes, so the two shift up by an identical number of px). */
+.ai-tile-art > .ait-stack,
+.ai-tile-art > .ait-cage { grid-area: 1 / 1; }
+.ai-tile-art .ait-stack {
+  position: relative;
+  width: 66%;
+  aspect-ratio: 1 / 1;
+  margin-bottom: 11%;            /* lift off the label gradient */
+}
+
+/* Containment cage — sized so its clamps sit ~9px off the hexagon's four
+   extremes at idle. Burst peak (scale 1.061 = +4.3px, plus up to 7px of
+   jitter) carries the glyph THROUGH them: that overrun is the whole point of
+   the hover, so these numbers are load-bearing, not decorative.
+   Hexagon extent inside .ait-stack: 67.5% of half-width, 78% of half-height. */
+.ai-tile-art .ait-cage {
+  position: relative;
+  width: 50%;                    /* ~9px off the hexagon's left/right extremes */
+  height: 44%;                   /* ~6px off its top/bottom vertices          */
+  margin-bottom: 11%;
+  pointer-events: none;
+}
+/* Four clamps at the exact points the glyph touches: the hexagon's top and
+   bottom vertices, and its left and right edge midpoints. */
+.ai-tile-art .ait-clamp {
+  position: absolute;
+  background: rgba(66,196,122,0.38);
+}
+.ai-tile-art .ait-clamp-t,
+.ai-tile-art .ait-clamp-b { left: 50%; width: 28%; height: 2px; transform: translateX(-50%); }
+.ai-tile-art .ait-clamp-l,
+.ai-tile-art .ait-clamp-r { top: 50%; height: 28%; width: 2px; transform: translateY(-50%); }
+.ai-tile-art .ait-clamp-t { top: 0; }
+.ai-tile-art .ait-clamp-b { bottom: 0; }
+.ai-tile-art .ait-clamp-l { left: 0; }
+.ai-tile-art .ait-clamp-r { right: 0; }
+.ai-tile-art .ait-breathe {
+  position: absolute; inset: 0;
+  animation: ait-breathe 5.2s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes ait-breathe {
+  0%   { transform: scale(1.000) translate3d(0,  0.6px, 0); }
+  100% { transform: scale(1.014) translate3d(0, -0.6px, 0); }
+}
+.ai-tile-art .ait-layers {
+  position: absolute; inset: 0;
+  isolation: isolate;            /* contain the screen-blended ghosts */
+}
+.ai-tile-art .ait-layer { position: absolute; inset: 0; }
+.ai-tile-art .ait-layer svg { display: block; width: 100%; height: 100%; }
+
+/* Main glyph. The soft feTurbulence/feDisplacementMap warp gives the organic
+   "not-quite-machined" wobble under the mechanical CSS breaks. It is static
+   content, so the filter rasterises once and is cached. */
+.ai-tile-art .ait-main {
+  color: var(--green, #42c47a);
+  filter: url(#ait-warp) drop-shadow(0 0 9px rgba(66,196,122,0.42));
+}
+/* Chromatic ghosts — screen-blended copies. Idle: invisible except for a
+   ~1.5px shimmer blip once per 7s cycle (offset delays so they never blip
+   together, which would read as a full RGB split). */
+.ai-tile-art .ait-ghost-r { color: #ff2f4d; mix-blend-mode: screen; opacity: 0; }
+.ai-tile-art .ait-ghost-c { color: #26e2ff; mix-blend-mode: screen; opacity: 0; }
+.ai-tile-art .ait-ghost-r { animation: ait-shimmer-r 7s linear infinite; }
+.ai-tile-art .ait-ghost-c { animation: ait-shimmer-c 7s linear infinite 2.4s; }
+@keyframes ait-shimmer-r {
+  0%, 88%, 100% { opacity: 0;    transform: translate3d(0, 0, 0); }
+  90%           { opacity: 0.34; transform: translate3d(-1.5px, 0, 0); }
+  93%           { opacity: 0.16; transform: translate3d(1px, 0, 0); }
+  96%           { opacity: 0;    transform: translate3d(0, 0, 0); }
+}
+@keyframes ait-shimmer-c {
+  0%, 88%, 100% { opacity: 0;    transform: translate3d(0, 0, 0); }
+  90%           { opacity: 0.30; transform: translate3d(1.5px, 0, 0); }
+  93%           { opacity: 0.14; transform: translate3d(-1px, 0, 0); }
+  96%           { opacity: 0;    transform: translate3d(0, 0, 0); }
+}
+
+/* Slice layers — idle rest state is a zero-height band, fully transparent, so
+   they cost nothing until the burst. All polygons in every keyframe below use
+   exactly 4 vertices so clip-path stays interpolable. */
+.ai-tile-art .ait-slice {
+  color: var(--green, #42c47a);
+  opacity: 0;
+  clip-path: polygon(0% 50%, 100% 50%, 100% 50%, 0% 50%);
+}
+.ai-tile-art .ait-slice-b { color: #9dffcb; }
+.ai-tile-art .ait-slice-c { color: #26e2ff; mix-blend-mode: screen; }
+
+/* Digital noise blocks — a data-URI feTurbulence tile (decoded once as an
+   image, so no live filter cost). Invisible until the burst. */
+.ai-tile-art .ait-noise {
+  inset: 0;
+  opacity: 0;
+  mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 0.26  0 0 0 0 0.77  0 0 0 0 0.48  0 0 0 -1.35 1'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+  background-size: 140px 140px;
+  clip-path: polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%);
+}
+
+/* Containment frame — this is what the glyph strains against. Faint at idle;
+   the corner brackets take the hits during the burst. */
+.ai-tile-art .ait-frame {
+  inset: 11px;
+  border: 1px solid rgba(66,196,122,0.10);
+  opacity: 0.7;
+}
+.ai-tile-art .ait-corner {
+  position: absolute;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(66,196,122,0.42);
+}
+.ai-tile-art .ait-corner-tl { top: -1px; left: -1px;  border-right: 0; border-bottom: 0; }
+.ai-tile-art .ait-corner-tr { top: -1px; right: -1px; border-left: 0;  border-bottom: 0; }
+.ai-tile-art .ait-corner-bl { bottom: -1px; left: -1px;  border-right: 0; border-top: 0; }
+.ai-tile-art .ait-corner-br { bottom: -1px; right: -1px; border-left: 0;  border-top: 0; }
+
+/* Full-bleed hard tick, beat 1. */
+.ai-tile-art .ait-flash {
+  inset: 0;
+  background: linear-gradient(to bottom,
+    rgba(160,255,205,0.16) 0%, rgba(66,196,122,0.10) 55%, rgba(255,255,255,0.05) 100%);
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   HOVER BEAT 1 — INSTANT TICK (0–240 ms)
+   Fires the frame that the pointer lands. steps(1,end) everywhere: no easing,
+   no ramp-in. The eye should register a hit, not a transition.
+   ───────────────────────────────────────────────────────────────────────── */
+.project-tile:hover      .ai-tile-art .ait-flash,
+.project-tile:focus-visible .ai-tile-art .ait-flash {
+  animation: ait-flash 240ms steps(1, end) 1;
+}
+@keyframes ait-flash {
+  0%   { opacity: 0.00; }
+  3%   { opacity: 0.90; }
+  11%  { opacity: 0.10; }
+  17%  { opacity: 0.62; }
+  27%  { opacity: 0.00; }
+  39%  { opacity: 0.36; }
+  53%  { opacity: 0.06; }
+  68%  { opacity: 0.22; }
+  100% { opacity: 0.00; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   HOVER BEAT 2 — BREAKOUT BURST (0–620 ms)
+   The glyph tries to leave the tile. Scale peaks at 1.061 so its extremities
+   overrun .ait-frame, the frame gets hit, the slices tear horizontally, and
+   the ghosts split hard. Every burst animation uses fill-mode `none` (the
+   default) — see the SUSTAIN note below for why that matters.
+   Keyframe stops are deliberately non-uniform (4/11/14/23/27/39/44/...) so the
+   rhythm never reads as a metronome.
+   ───────────────────────────────────────────────────────────────────────── */
+.project-tile:hover      .ai-tile-art .ait-stack,
+.project-tile:focus-visible .ai-tile-art .ait-stack {
+  animation: ait-burst-stack 620ms steps(1, end) 1;
+}
+@keyframes ait-burst-stack {
+  0%   { transform: scale(1.000) translate3d( 0px,  0px, 0); }
+  4%   { transform: scale(1.058) translate3d(-5px,  2px, 0); }
+  11%  { transform: scale(1.020) translate3d( 6px, -3px, 0); }
+  14%  { transform: scale(1.061) translate3d(-2px, -1px, 0); }
+  23%  { transform: scale(1.004) translate3d( 4px,  3px, 0); }
+  27%  { transform: scale(1.054) translate3d(-7px,  0px, 0); }
+  39%  { transform: scale(1.030) translate3d( 2px, -4px, 0); }
+  44%  { transform: scale(1.056) translate3d(-3px,  1px, 0); }
+  57%  { transform: scale(1.012) translate3d( 5px,  2px, 0); }
+  62%  { transform: scale(1.048) translate3d(-4px, -2px, 0); }
+  73%  { transform: scale(1.026) translate3d( 2px,  1px, 0); }
+  81%  { transform: scale(1.041) translate3d(-2px,  0px, 0); }
+  90%  { transform: scale(1.017) translate3d( 1px, -1px, 0); }
+  100% { transform: scale(1.028) translate3d( 0px,  0px, 0); }
+}
+
+/* Main glyph: harder organic warp for the whole hover, plus a hot glow. */
+.project-tile:hover      .ai-tile-art .ait-main,
+.project-tile:focus-visible .ai-tile-art .ait-main {
+  filter: url(#ait-warp-hard) drop-shadow(0 0 16px rgba(90,240,160,0.60));
+}
+
+/* Ghosts: violent split during the burst, then a fast low-amplitude jitter. */
+.project-tile:hover      .ai-tile-art .ait-ghost-r,
+.project-tile:focus-visible .ai-tile-art .ait-ghost-r {
+  animation: ait-burst-ghost-r 620ms steps(1, end) 1,
+             ait-sustain-ghost-r 2.1s steps(1, end) 620ms infinite;
+}
+.project-tile:hover      .ai-tile-art .ait-ghost-c,
+.project-tile:focus-visible .ai-tile-art .ait-ghost-c {
+  animation: ait-burst-ghost-c 620ms steps(1, end) 1,
+             ait-sustain-ghost-c 2.1s steps(1, end) 620ms infinite;
+}
+@keyframes ait-burst-ghost-r {
+  0%   { opacity: 0.00; transform: translate3d(  0px, 0, 0) scale(1.00); }
+  3%   { opacity: 0.92; transform: translate3d(-13px, 2px, 0) scale(1.03); }
+  9%   { opacity: 0.45; transform: translate3d(  7px,-1px, 0) scale(1.00); }
+  15%  { opacity: 0.88; transform: translate3d(-16px, 0px, 0) scale(1.05); }
+  22%  { opacity: 0.20; transform: translate3d(  3px, 3px, 0) scale(1.01); }
+  34%  { opacity: 0.80; transform: translate3d(-10px,-2px, 0) scale(1.02); }
+  43%  { opacity: 0.30; transform: translate3d(  9px, 1px, 0) scale(1.00); }
+  55%  { opacity: 0.70; transform: translate3d( -7px, 0px, 0) scale(1.03); }
+  67%  { opacity: 0.24; transform: translate3d(  4px,-2px, 0) scale(1.00); }
+  79%  { opacity: 0.52; transform: translate3d( -5px, 1px, 0) scale(1.01); }
+  91%  { opacity: 0.18; transform: translate3d(  2px, 0px, 0) scale(1.00); }
+  100% { opacity: 0.30; transform: translate3d( -3px, 0px, 0) scale(1.01); }
+}
+@keyframes ait-burst-ghost-c {
+  0%   { opacity: 0.00; transform: translate3d(  0px, 0, 0) scale(1.00); }
+  3%   { opacity: 0.90; transform: translate3d( 12px,-2px, 0) scale(1.03); }
+  9%   { opacity: 0.38; transform: translate3d( -8px, 1px, 0) scale(1.00); }
+  15%  { opacity: 0.86; transform: translate3d( 15px, 0px, 0) scale(1.05); }
+  22%  { opacity: 0.18; transform: translate3d( -4px,-3px, 0) scale(1.01); }
+  34%  { opacity: 0.78; transform: translate3d( 11px, 2px, 0) scale(1.02); }
+  43%  { opacity: 0.26; transform: translate3d( -9px,-1px, 0) scale(1.00); }
+  55%  { opacity: 0.68; transform: translate3d(  8px, 0px, 0) scale(1.03); }
+  67%  { opacity: 0.22; transform: translate3d( -3px, 2px, 0) scale(1.00); }
+  79%  { opacity: 0.50; transform: translate3d(  6px,-1px, 0) scale(1.01); }
+  91%  { opacity: 0.16; transform: translate3d( -2px, 0px, 0) scale(1.00); }
+  100% { opacity: 0.28; transform: translate3d(  3px, 0px, 0) scale(1.01); }
+}
+
+/* Horizontal slice tear. Three bands walking independently over the glyph.
+   Every polygon has 4 vertices; steps(1,end) means the bands jump-cut rather
+   than slide, which is what sells "mechanical break" over "smooth morph". */
+.project-tile:hover      .ai-tile-art .ait-slice-a,
+.project-tile:focus-visible .ai-tile-art .ait-slice-a {
+  animation: ait-burst-slice-a 620ms steps(1, end) 1,
+             ait-sustain-slice-a 2.4s steps(1, end) 620ms infinite;
+}
+.project-tile:hover      .ai-tile-art .ait-slice-b,
+.project-tile:focus-visible .ai-tile-art .ait-slice-b {
+  animation: ait-burst-slice-b 620ms steps(1, end) 1,
+             ait-sustain-slice-b 3.1s steps(1, end) 620ms infinite;
+}
+.project-tile:hover      .ai-tile-art .ait-slice-c,
+.project-tile:focus-visible .ai-tile-art .ait-slice-c {
+  animation: ait-burst-slice-c 620ms steps(1, end) 1;
+}
+@keyframes ait-burst-slice-a {
+  0%   { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 8%,  100% 8%,  100% 8%,  0% 8%); }
+  5%   { opacity: 1; transform: translate3d( -8px, 0, 0); clip-path: polygon(0% 6%,  100% 6%,  100% 14%, 0% 14%); }
+  9%   { opacity: 1; transform: translate3d(  5px, 0, 0); clip-path: polygon(0% 22%, 100% 22%, 100% 27%, 0% 27%); }
+  16%  { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 27%, 100% 27%, 100% 27%, 0% 27%); }
+  24%  { opacity: 1; transform: translate3d(  7px, 0, 0); clip-path: polygon(0% 12%, 100% 12%, 100% 19%, 0% 19%); }
+  27%  { opacity: 1; transform: translate3d( -4px, 0, 0); clip-path: polygon(0% 40%, 100% 40%, 100% 46%, 0% 46%); }
+  41%  { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 46%, 100% 46%, 100% 46%, 0% 46%); }
+  46%  { opacity: 1; transform: translate3d( -6px, 0, 0); clip-path: polygon(0% 4%,  100% 4%,  100% 11%, 0% 11%); }
+  58%  { opacity: 1; transform: translate3d(  3px, 0, 0); clip-path: polygon(0% 33%, 100% 33%, 100% 37%, 0% 37%); }
+  63%  { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 37%, 100% 37%, 100% 37%, 0% 37%); }
+  79%  { opacity: 1; transform: translate3d( -4px, 0, 0); clip-path: polygon(0% 17%, 100% 17%, 100% 21%, 0% 21%); }
+  88%  { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 21%, 100% 21%, 100% 21%, 0% 21%); }
+  100% { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 8%,  100% 8%,  100% 8%,  0% 8%); }
+}
+@keyframes ait-burst-slice-b {
+  0%   { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 52%, 100% 52%, 100% 52%, 0% 52%); }
+  4%   { opacity: 1; transform: translate3d(  9px, 0, 0); clip-path: polygon(0% 48%, 100% 48%, 100% 56%, 0% 56%); }
+  11%  { opacity: 1; transform: translate3d( -6px, 0, 0); clip-path: polygon(0% 62%, 100% 62%, 100% 69%, 0% 69%); }
+  18%  { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 69%, 100% 69%, 100% 69%, 0% 69%); }
+  23%  { opacity: 1; transform: translate3d(  6px, 0, 0); clip-path: polygon(0% 44%, 100% 44%, 100% 50%, 0% 50%); }
+  31%  { opacity: 1; transform: translate3d( -9px, 0, 0); clip-path: polygon(0% 74%, 100% 74%, 100% 81%, 0% 81%); }
+  37%  { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 81%, 100% 81%, 100% 81%, 0% 81%); }
+  49%  { opacity: 1; transform: translate3d(  4px, 0, 0); clip-path: polygon(0% 57%, 100% 57%, 100% 63%, 0% 63%); }
+  54%  { opacity: 1; transform: translate3d( -7px, 0, 0); clip-path: polygon(0% 86%, 100% 86%, 100% 92%, 0% 92%); }
+  61%  { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 92%, 100% 92%, 100% 92%, 0% 92%); }
+  72%  { opacity: 1; transform: translate3d(  5px, 0, 0); clip-path: polygon(0% 50%, 100% 50%, 100% 54%, 0% 54%); }
+  84%  { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 54%, 100% 54%, 100% 54%, 0% 54%); }
+  100% { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 52%, 100% 52%, 100% 52%, 0% 52%); }
+}
+@keyframes ait-burst-slice-c {
+  0%   { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 30%, 100% 30%, 100% 30%, 0% 30%); }
+  6%   { opacity: 1; transform: translate3d(-11px, 0, 0); clip-path: polygon(0% 28%, 100% 28%, 100% 34%, 0% 34%); }
+  13%  { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 34%, 100% 34%, 100% 34%, 0% 34%); }
+  21%  { opacity: 1; transform: translate3d( 10px, 0, 0); clip-path: polygon(0% 66%, 100% 66%, 100% 71%, 0% 71%); }
+  26%  { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 71%, 100% 71%, 100% 71%, 0% 71%); }
+  36%  { opacity: 1; transform: translate3d( -8px, 0, 0); clip-path: polygon(0% 15%, 100% 15%, 100% 20%, 0% 20%); }
+  44%  { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 20%, 100% 20%, 100% 20%, 0% 20%); }
+  57%  { opacity: 1; transform: translate3d(  7px, 0, 0); clip-path: polygon(0% 78%, 100% 78%, 100% 84%, 0% 84%); }
+  66%  { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 84%, 100% 84%, 100% 84%, 0% 84%); }
+  83%  { opacity: 1; transform: translate3d( -5px, 0, 0); clip-path: polygon(0% 41%, 100% 41%, 100% 47%, 0% 47%); }
+  92%  { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 47%, 100% 47%, 100% 47%, 0% 47%); }
+  100% { opacity: 0; transform: translate3d(  0px, 0, 0); clip-path: polygon(0% 30%, 100% 30%, 100% 30%, 0% 30%); }
+}
+
+/* Noise blocks — thin horizontal bands of turbulence punched through. */
+.project-tile:hover      .ai-tile-art .ait-noise,
+.project-tile:focus-visible .ai-tile-art .ait-noise {
+  animation: ait-burst-noise 620ms steps(1, end) 1,
+             ait-sustain-noise 2.8s steps(1, end) 620ms infinite;
+}
+@keyframes ait-burst-noise {
+  0%   { opacity: 0.00; clip-path: polygon(0% 0%,  100% 0%,  100% 0%,  0% 0%); }
+  3%   { opacity: 0.60; clip-path: polygon(0% 18%, 100% 18%, 100% 27%, 0% 27%); }
+  8%   { opacity: 0.28; clip-path: polygon(0% 52%, 100% 52%, 100% 57%, 0% 57%); }
+  12%  { opacity: 0.00; clip-path: polygon(0% 57%, 100% 57%, 100% 57%, 0% 57%); }
+  21%  { opacity: 0.55; clip-path: polygon(0% 34%, 100% 34%, 100% 46%, 0% 46%); }
+  29%  { opacity: 0.00; clip-path: polygon(0% 46%, 100% 46%, 100% 46%, 0% 46%); }
+  38%  { opacity: 0.48; clip-path: polygon(0% 8%,  100% 8%,  100% 15%, 0% 15%); }
+  45%  { opacity: 0.00; clip-path: polygon(0% 15%, 100% 15%, 100% 15%, 0% 15%); }
+  59%  { opacity: 0.42; clip-path: polygon(0% 63%, 100% 63%, 100% 73%, 0% 73%); }
+  68%  { opacity: 0.00; clip-path: polygon(0% 73%, 100% 73%, 100% 73%, 0% 73%); }
+  81%  { opacity: 0.30; clip-path: polygon(0% 24%, 100% 24%, 100% 30%, 0% 30%); }
+  89%  { opacity: 0.00; clip-path: polygon(0% 30%, 100% 30%, 100% 30%, 0% 30%); }
+  100% { opacity: 0.00; clip-path: polygon(0% 0%,  100% 0%,  100% 0%,  0% 0%); }
+}
+
+/* Frame takes the impact: corners flare and the whole frame shakes. */
+.project-tile:hover      .ai-tile-art .ait-frame,
+.project-tile:focus-visible .ai-tile-art .ait-frame {
+  animation: ait-burst-frame 620ms steps(1, end) 1,
+             ait-sustain-frame 2.6s ease-in-out 620ms infinite;
+  border-color: rgba(66,196,122,0.30);
+}
+@keyframes ait-burst-frame {
+  0%   { opacity: 0.70; transform: translate3d( 0px,  0px, 0); }
+  4%   { opacity: 1.00; transform: translate3d( 2px, -1px, 0); }
+  13%  { opacity: 0.55; transform: translate3d(-2px,  1px, 0); }
+  19%  { opacity: 1.00; transform: translate3d( 1px,  2px, 0); }
+  31%  { opacity: 0.62; transform: translate3d(-1px, -2px, 0); }
+  42%  { opacity: 0.95; transform: translate3d( 2px,  0px, 0); }
+  56%  { opacity: 0.60; transform: translate3d(-1px,  1px, 0); }
+  71%  { opacity: 0.88; transform: translate3d( 1px, -1px, 0); }
+  86%  { opacity: 0.66; transform: translate3d( 0px,  1px, 0); }
+  100% { opacity: 0.90; transform: translate3d( 0px,  0px, 0); }
+}
+.project-tile:hover      .ai-tile-art .ait-corner,
+.project-tile:focus-visible .ai-tile-art .ait-corner {
+  border-color: rgba(150,255,205,0.95);
+}
+
+/* Cage takes the hits. The clamps flare white-hot and thicken as the glyph
+   punches through them; the cage itself recoils on the opposite beats from
+   .ait-stack so the collision reads as an impact rather than a shared shake. */
+.project-tile:hover      .ai-tile-art .ait-cage,
+.project-tile:focus-visible .ai-tile-art .ait-cage {
+  animation: ait-burst-cage 620ms steps(1, end) 1;
+}
+@keyframes ait-burst-cage {
+  0%   { transform: translate3d( 0px,  0px, 0) scale(1.000); }
+  4%   { transform: translate3d( 3px, -1px, 0) scale(1.012); }
+  11%  { transform: translate3d(-3px,  2px, 0) scale(0.994); }
+  14%  { transform: translate3d( 1px,  1px, 0) scale(1.015); }
+  27%  { transform: translate3d( 4px,  0px, 0) scale(0.997); }
+  39%  { transform: translate3d(-2px,  2px, 0) scale(1.010); }
+  44%  { transform: translate3d( 2px, -1px, 0) scale(0.996); }
+  62%  { transform: translate3d(-3px,  1px, 0) scale(1.008); }
+  81%  { transform: translate3d( 1px,  0px, 0) scale(1.002); }
+  100% { transform: translate3d( 0px,  0px, 0) scale(1.000); }
+}
+/* Clamps animate opacity/background only — their centring transform must
+   survive, so nothing here may touch `transform`. */
+.project-tile:hover      .ai-tile-art .ait-clamp,
+.project-tile:focus-visible .ai-tile-art .ait-clamp {
+  animation: ait-burst-clamp 620ms steps(1, end) 1,
+             ait-sustain-clamp 1.9s ease-in-out 620ms infinite alternate;
+}
+@keyframes ait-burst-clamp {
+  0%   { background: rgba(66,196,122,0.38);  box-shadow: none; }
+  4%   { background: rgba(190,255,220,1);    box-shadow: 0 0 10px rgba(120,255,190,0.9); }
+  13%  { background: rgba(66,196,122,0.55);  box-shadow: none; }
+  19%  { background: rgba(190,255,220,1);    box-shadow: 0 0 12px rgba(120,255,190,0.9); }
+  31%  { background: rgba(66,196,122,0.45);  box-shadow: none; }
+  44%  { background: rgba(255,255,255,0.95); box-shadow: 0 0 9px rgba(120,255,190,0.8); }
+  57%  { background: rgba(66,196,122,0.50);  box-shadow: none; }
+  71%  { background: rgba(160,255,205,0.9);  box-shadow: 0 0 8px rgba(120,255,190,0.7); }
+  86%  { background: rgba(66,196,122,0.55);  box-shadow: none; }
+  100% { background: rgba(120,255,190,0.75); box-shadow: 0 0 6px rgba(120,255,190,0.5); }
+}
+@keyframes ait-sustain-clamp {
+  0%   { background: rgba(120,255,190,0.70); box-shadow: 0 0 5px rgba(120,255,190,0.35); }
+  100% { background: rgba(160,255,205,0.95); box-shadow: 0 0 9px rgba(120,255,190,0.65); }
+}
+
+/* Glow goes hot and fast while hovering. */
+.project-tile:hover      .ai-tile-art .ait-glow,
+.project-tile:focus-visible .ai-tile-art .ait-glow {
+  animation: ait-glow-hot 1.4s ease-in-out infinite alternate;
+}
+@keyframes ait-glow-hot {
+  0%   { opacity: 0.55; transform: scale(1.02); }
+  40%  { opacity: 0.92; transform: scale(1.13); }
+  100% { opacity: 0.68; transform: scale(1.07); }
+}
+
+/* Sweep speeds up — the containment field is cycling harder. */
+.project-tile:hover      .ai-tile-art .ait-sweep,
+.project-tile:focus-visible .ai-tile-art .ait-sweep {
+  animation-duration: 2.6s;
+}
+/* Scanlines tighten and drift faster. */
+.project-tile:hover      .ai-tile-art .ait-scan,
+.project-tile:focus-visible .ai-tile-art .ait-scan {
+  animation-duration: 1.6s;
+  opacity: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   HOVER BEAT 3 — SUSTAIN (620 ms → mouseleave)
+   The handoff trick: every burst animation uses fill-mode `none`, and every
+   sustain animation carries `620ms` of delay with no fill. Before 620 ms the
+   sustain animation contributes nothing (it is still in its delay phase);
+   after 620 ms the burst has ended and contributes nothing. So the two never
+   both own a property, and no `!important` or JS class-swap is needed.
+   Sustain is the same vocabulary at ~25% amplitude and a low duty cycle.
+   ───────────────────────────────────────────────────────────────────────── */
+.project-tile:hover      .ai-tile-art .ait-breathe,
+.project-tile:focus-visible .ai-tile-art .ait-breathe {
+  animation: ait-sustain-breathe 1.7s ease-in-out 620ms infinite alternate;
+}
+@keyframes ait-sustain-breathe {
+  0%   { transform: scale(1.028) translate3d(0,  0px, 0); }
+  100% { transform: scale(1.046) translate3d(0, -2px, 0); }
+}
+@keyframes ait-sustain-ghost-r {
+  0%, 100% { opacity: 0.22; transform: translate3d(-3px, 0, 0) scale(1.01); }
+  6%       { opacity: 0.62; transform: translate3d(-7px, 1px, 0) scale(1.02); }
+  10%      { opacity: 0.20; transform: translate3d(-2px, 0, 0) scale(1.00); }
+  47%      { opacity: 0.55; transform: translate3d(-6px,-1px, 0) scale(1.02); }
+  51%      { opacity: 0.24; transform: translate3d(-3px, 0, 0) scale(1.01); }
+  78%      { opacity: 0.44; transform: translate3d(-5px, 1px, 0) scale(1.01); }
+  82%      { opacity: 0.22; transform: translate3d(-3px, 0, 0) scale(1.01); }
+}
+@keyframes ait-sustain-ghost-c {
+  0%, 100% { opacity: 0.20; transform: translate3d( 3px, 0, 0) scale(1.01); }
+  4%       { opacity: 0.58; transform: translate3d( 7px,-1px, 0) scale(1.02); }
+  9%       { opacity: 0.18; transform: translate3d( 2px, 0, 0) scale(1.00); }
+  36%      { opacity: 0.52; transform: translate3d( 6px, 1px, 0) scale(1.02); }
+  41%      { opacity: 0.22; transform: translate3d( 3px, 0, 0) scale(1.01); }
+  69%      { opacity: 0.40; transform: translate3d( 5px,-1px, 0) scale(1.01); }
+  74%      { opacity: 0.20; transform: translate3d( 3px, 0, 0) scale(1.01); }
+}
+@keyframes ait-sustain-slice-a {
+  0%, 100% { opacity: 0; transform: translate3d( 0px, 0, 0); clip-path: polygon(0% 30%, 100% 30%, 100% 30%, 0% 30%); }
+  3%       { opacity: 1; transform: translate3d(-5px, 0, 0); clip-path: polygon(0% 28%, 100% 28%, 100% 33%, 0% 33%); }
+  6%       { opacity: 0; transform: translate3d( 0px, 0, 0); clip-path: polygon(0% 33%, 100% 33%, 100% 33%, 0% 33%); }
+  41%      { opacity: 1; transform: translate3d( 4px, 0, 0); clip-path: polygon(0% 55%, 100% 55%, 100% 59%, 0% 59%); }
+  44%      { opacity: 0; transform: translate3d( 0px, 0, 0); clip-path: polygon(0% 59%, 100% 59%, 100% 59%, 0% 59%); }
+  72%      { opacity: 1; transform: translate3d(-3px, 0, 0); clip-path: polygon(0% 13%, 100% 13%, 100% 17%, 0% 17%); }
+  76%      { opacity: 0; transform: translate3d( 0px, 0, 0); clip-path: polygon(0% 17%, 100% 17%, 100% 17%, 0% 17%); }
+}
+@keyframes ait-sustain-slice-b {
+  0%, 100% { opacity: 0; transform: translate3d( 0px, 0, 0); clip-path: polygon(0% 70%, 100% 70%, 100% 70%, 0% 70%); }
+  17%      { opacity: 1; transform: translate3d( 6px, 0, 0); clip-path: polygon(0% 67%, 100% 67%, 100% 72%, 0% 72%); }
+  21%      { opacity: 0; transform: translate3d( 0px, 0, 0); clip-path: polygon(0% 72%, 100% 72%, 100% 72%, 0% 72%); }
+  58%      { opacity: 1; transform: translate3d(-4px, 0, 0); clip-path: polygon(0% 42%, 100% 42%, 100% 46%, 0% 46%); }
+  62%      { opacity: 0; transform: translate3d( 0px, 0, 0); clip-path: polygon(0% 46%, 100% 46%, 100% 46%, 0% 46%); }
+  89%      { opacity: 1; transform: translate3d( 3px, 0, 0); clip-path: polygon(0% 82%, 100% 82%, 100% 86%, 0% 86%); }
+  93%      { opacity: 0; transform: translate3d( 0px, 0, 0); clip-path: polygon(0% 86%, 100% 86%, 100% 86%, 0% 86%); }
+}
+@keyframes ait-sustain-noise {
+  0%, 100% { opacity: 0.00; clip-path: polygon(0% 40%, 100% 40%, 100% 40%, 0% 40%); }
+  8%       { opacity: 0.26; clip-path: polygon(0% 36%, 100% 36%, 100% 43%, 0% 43%); }
+  12%      { opacity: 0.00; clip-path: polygon(0% 43%, 100% 43%, 100% 43%, 0% 43%); }
+  53%      { opacity: 0.22; clip-path: polygon(0% 60%, 100% 60%, 100% 66%, 0% 66%); }
+  57%      { opacity: 0.00; clip-path: polygon(0% 66%, 100% 66%, 100% 66%, 0% 66%); }
+  84%      { opacity: 0.18; clip-path: polygon(0% 20%, 100% 20%, 100% 25%, 0% 25%); }
+  88%      { opacity: 0.00; clip-path: polygon(0% 25%, 100% 25%, 100% 25%, 0% 25%); }
+}
+@keyframes ait-sustain-frame {
+  0%   { opacity: 0.75; }
+  50%  { opacity: 1.00; }
+  100% { opacity: 0.75; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   BEAT 4 — SNAP-BACK
+   No leave animation is declared on purpose. Dropping :hover removes every
+   burst/sustain rule in one frame, and because none of them use fill-mode
+   forwards, the layers revert instantly to the idle rest state: ghosts to
+   opacity 0, slices to a zero-height band, stack to scale 1. The break
+   "reseals" on the same frame the pointer leaves, which is the intended read.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────────────────
+   REDUCED MOTION
+   Static glyph, single frame. No drift, no flicker, no burst — hover only
+   raises the glow and frame to a steady state so the tile still acknowledges
+   the pointer. Ghost/slice/noise layers are removed from the render entirely.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ai-tile-art *,
+  .ai-tile-art *::before,
+  .ai-tile-art *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .ai-tile-art .ait-ghost-r,
+  .ai-tile-art .ait-ghost-c,
+  .ai-tile-art .ait-slice,
+  .ai-tile-art .ait-noise,
+  .ai-tile-art .ait-flash { display: none !important; }
+  .ai-tile-art .ait-main { filter: drop-shadow(0 0 9px rgba(66,196,122,0.42)) !important; }
+  .ai-tile-art .ait-glow { opacity: 0.42; transform: none; }
+  .ai-tile-art .ait-breathe { transform: none; }
+  .ai-tile-art .ait-cage { transform: none; }
+  .project-tile:hover .ai-tile-art .ait-clamp { background: rgba(120,255,190,0.85); }
+  .project-tile:hover .ai-tile-art .ait-glow { opacity: 0.72; }
+  .project-tile:hover .ai-tile-art .ait-frame { opacity: 1; border-color: rgba(66,196,122,0.34); }
+  .project-tile:hover .ai-tile-art .ait-corner { border-color: rgba(150,255,205,0.95); }
+}
+
+/* ── end AI tile art ── */
