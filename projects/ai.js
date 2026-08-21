@@ -1,10 +1,19 @@
 /* AI-Assisted Development — content build (issue #19).
    Copy produced via the full loop: portfolio-copy-editor draft →
    draft-critique structural pass → copy-editor reconcile (2026-08-12).
+   2026-08-15: §4 rewritten to bullets + knowledge-layer diagram, then SPLIT —
+   §4 The Ecosystem / §5 What Earns a Place in the Kit / §6 Mission Control.
    ⚠ Every number on this page is on Max's sign-off list (329/105, ~15
    scripts, 8-phase, 3-tier, 95%, five reviewers, 0–100, three judges,
-   15 skills, 10+ subagents, 285/13, 700+, 76) — confirmed facts per the
+   15 skills, 10+ subagents, 275/13 + 123/77/71/4, 700+, 76, 169 files,
+   20 tables, 10-of-22 adapted, 15 analysts / 8 pairs, 68→58 paths,
+   66/174k · 60/210k · 80 @3.2x, 68% fan-out) — confirmed facts per the
    verified inventory, pending his per-line nod before push.
+   ⚠ HELD OUT pending Max's Windows-side confirm: memory-benchmark figures
+   (95.2% recall, 1.49:1, 14 memories / 42 questions, 648 thoughts) —
+   source is D:\ClaudeCode\workbench\benchmark\results-2026-08-05.md.
+   ⚠ The 68% fan-out figure's source file is UNTRACKED (~/ClaudeKit/references/
+   orchestrate-fanout-bakeoff-2026-06.md) — commit it before push.
    hero: null on purpose → PLACEHOLDER_HERO until a real capture exists
    (Cockpit star map is the lead candidate; §5 also needs Windows captures). */
 window.PROJECTS = window.PROJECTS || {};
@@ -238,10 +247,52 @@ window.PROJECTS.ai = {
       type: 'prose',
       title: 'The Ecosystem',
       blocks: [
-        { type: 'paragraph', html: '<div class="proj-eyebrow">// 04 — Skills, Memory, Provenance</div><p>The system is <strong>kitted out, not trained</strong>. Its behavior comes from what I equip it with — skills, subagents, rules, memory, and feedback loops — rather than from any change to the underlying model. Every improvement is something I can read, edit, version, and install on another machine.</p>' },
-        { type: 'paragraph', html: '<p>That kit holds <strong>15 custom skills</strong> and <strong>more than 10 custom subagents</strong> I authored, alongside third-party agents I vet, harden, and curate but don’t claim as my own. It ships publicly as claude-kit, with cross-platform installers for Mac and Windows, benchmark harnesses, and written vetting analyses of the third-party stacks I evaluated before adopting them. A <strong>per-artifact provenance table</strong> records what was authored, what was adapted, and what was curated.</p>' },
-        { type: 'paragraph', html: '<p>Agent activity is observable while it runs. Tool events feed through hooks into a live session monitor and a statusline activity board, so a long autonomous run is something I can watch in real time. The dashboard app itself is third-party; the hook wiring that feeds it is mine.</p>' },
-        { type: 'paragraph', html: '<p>Memory is layered so context survives past a single session. Per-project memory files (<strong>285 across 13 projects</strong>) hold the decisions and corrections specific to one codebase. Above those sits a semantic thought database of <strong>700+ captured thoughts</strong>, ranked by actual usage on a scheduled job and access-logged, so entries that never get used sink in rank. A third layer keeps a corpus of past sessions, so a pattern that worked in one project can be recalled in another.</p>' }
+        { type: 'paragraph', html: '<div class="proj-eyebrow">// 04 — Skills, Knowledge, Memory</div><p class="dm-lead">Underneath the kit sits a knowledge layer: the maps agents load before they touch anything. Extract what\u2019s true, validate it against a source that isn\u2019t the agent, index it cheap, and correct it when a session proves it wrong. Only the subject changes.</p>' },
+
+        { type: 'paragraph', html: '<div class="proj-eyebrow">// The Knowledge Layer</div>' },
+        { type: 'list', items: [
+          '<span class="bullet-lead">Engine ground truth:</span> probes export live editor state to <strong>169 files</strong> — type inventory, 20 data tables, behavior trees — so specs come from the engine, not memory.',
+          '<span class="bullet-lead">Two-audience docs:</span> every spec ships as a human-readable version and a condensed agent cut with a claim-to-source index, each claim tagged by how far it’s verified.',
+          '<span class="bullet-lead">Typed session memory:</span> <strong>275 fact files across 13 projects</strong> — preferences, constraints, source pointers — loaded automatically at the start of every session.'
+        ] },
+
+        { type: 'widget', html: '<div class="diag-wrap"><div class="diag-label">// One Pattern, Four Subjects</div><svg viewBox="0 0 1080 500" class="diag-svg" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arrAi4" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L7,4 L0,8 Z" fill="#2eb8cc"/></marker></defs><rect x="70" y="52" width="220" height="104" rx="6" class="box"/><text x="180" y="80" text-anchor="middle" class="label">ENGINE STATE</text><text x="180" y="104" text-anchor="middle" class="text">probes dump a live editor</text><text x="180" y="126" text-anchor="middle" class="text-xs">type inventory · data tables</text><text x="180" y="144" text-anchor="middle" class="text-xs">behavior-tree topology</text><rect x="310" y="52" width="220" height="104" rx="6" class="box"/><text x="420" y="80" text-anchor="middle" class="label">REFERENCE DOCS</text><text x="420" y="104" text-anchor="middle" class="text">one system, explained deep</text><text x="420" y="126" text-anchor="middle" class="text-xs">engine source first, then</text><text x="420" y="144" text-anchor="middle" class="text-xs">real usage, then community</text><rect x="550" y="52" width="220" height="104" rx="6" class="box"/><text x="660" y="80" text-anchor="middle" class="label">ROUTING MAPS</text><text x="660" y="104" text-anchor="middle" class="text">where things actually live</text><text x="660" y="126" text-anchor="middle" class="text-xs">owners · deprecations</text><text x="660" y="144" text-anchor="middle" class="text-xs">which specialist takes it</text><rect x="790" y="52" width="220" height="104" rx="6" class="box"/><text x="900" y="80" text-anchor="middle" class="label">SESSION MEMORY</text><text x="900" y="104" text-anchor="middle" class="text">one fact per file, typed</text><text x="900" y="126" text-anchor="middle" class="text-xs">275 files · 13 projects</text><text x="900" y="144" text-anchor="middle" class="text-xs">semantic store above them</text><line x1="180" y1="156" x2="180" y2="182" class="arrow"/><line x1="420" y1="156" x2="420" y2="182" class="arrow"/><line x1="660" y1="156" x2="660" y2="182" class="arrow"/><line x1="900" y1="156" x2="900" y2="182" class="arrow"/><line x1="180" y1="182" x2="900" y2="182" class="arrow"/><line x1="540" y1="182" x2="540" y2="202" class="arrow" marker-end="url(#arrAi4)"/><rect x="340" y="204" width="400" height="72" rx="6" class="box--key"/><text x="540" y="232" text-anchor="middle" class="title">VALIDATE</text><text x="540" y="254" text-anchor="middle" class="text">checked against something that didn’t write it</text><text x="540" y="270" text-anchor="middle" class="text-xs">a dump, engine source, or a direct diff — not the agent’s account</text><text x="316" y="240" text-anchor="end" class="note">nothing grades its own homework</text><line x1="540" y1="276" x2="540" y2="298" class="arrow" marker-end="url(#arrAi4)"/><rect x="340" y="300" width="400" height="72" rx="6" class="box"/><text x="540" y="328" text-anchor="middle" class="title">CONDENSE</text><text x="540" y="350" text-anchor="middle" class="text">an agent-facing cut, not the human document</text><text x="540" y="366" text-anchor="middle" class="text-xs">decision tables · gotchas · claim → source · unverified edges</text><text x="316" y="336" text-anchor="end" class="note">written for recall, not reading</text><line x1="540" y1="372" x2="540" y2="394" class="arrow" marker-end="url(#arrAi4)"/><rect x="340" y="396" width="400" height="72" rx="6" class="box--key"/><text x="540" y="424" text-anchor="middle" class="title">SESSION LOADS IT</text><text x="540" y="446" text-anchor="middle" class="text">index first, detail only when opened</text><text x="540" y="462" text-anchor="middle" class="text-xs">the always-on budget holds cues, not status</text><path d="M 740 432 L 1040 432 L 1040 104 L 1014 104" fill="none" class="arrow arrow--dashed" marker-end="url(#arrAi4)"/><text x="1026" y="490" text-anchor="end" class="text-xs">a session that proves a line wrong rewrites the source</text></svg><div class="diag-caption">Left to right is how knowledge gets in. The return line is how one session’s corrections change what the next one loads.</div></div>' },
+
+        { type: 'paragraph', html: '<div class="proj-eyebrow">// The Kit Itself</div>' },
+        { type: 'list', items: [
+          '<span class="bullet-lead">The kit:</span> <strong>15 custom skills and 10+ subagents</strong> authored and shipped publicly, with installers and benchmark harnesses so others can run it.',
+          '<span class="bullet-lead">Provenance tracked:</span> <strong>10 of the kit’s 22 subagents</strong> came from other repos, each logged in a table naming exactly what was cut before use.',
+          '<span class="bullet-lead">Live run visibility:</span> custom hooks pipe tool events into a session monitor, making long autonomous runs watchable in real time — dashboard adopted, wiring authored.'
+        ] },
+      ]
+    },
+
+    // ── § 5 ─ What Earns a Place in the Kit ────────────────────────────────
+    {
+      id: 'kit-standards',
+      label: 'What Earns a Place',
+      type: 'prose',
+      title: 'What Earns a Place in the Kit',
+      blocks: [
+        { type: 'paragraph', html: '<div class="proj-eyebrow">// 05 — Vetting, Adaptation, Evidence</div><p class="dm-lead">Most of what an agent system could run is someone else\u2019s work. What decides whether it helps is what I refuse to install, what I rebuild before trusting, and whether any of it was ever measured.</p>' },
+        { type: 'list', items: [
+          '<span class="bullet-lead">Adoption gate:</span> every candidate agent is read in full against four rules — minimal tool grants, no cross-agent handshakes, no fabricated metrics, reviewers stay read-only.',
+          '<span class="bullet-lead">One refused outright:</span> it hard-coded a fixed vulnerability count into its own output template and claimed “2.3M contexts, 47ms retrieval” — prose, not benchmarks.'
+        ] },
+
+        { type: 'paragraph', html: '<div class="proj-eyebrow">// Adapting a Published Pipeline</div>' },
+        { type: 'list', items: [
+          '<span class="bullet-lead">Head-to-head audit:</span> a published skills release compared against the kit across <strong>15 analyst agents and 8 collision pairs</strong>; of 68 cited file paths tested, 58 resolved.',
+          '<span class="bullet-lead">The verdict split:</span> <strong>2 of their primitives replaced mine outright, 5 were ported as ideas, 1 adopted alongside</strong> — nothing taken wholesale.'
+        ] },
+
+        { type: 'paragraph', html: '<div class="proj-eyebrow">// What’s Actually Measured</div>' },
+        { type: 'list', items: [
+          '<span class="bullet-lead">Bake-off finding:</span> the third-party arm ran TDD and code review yet shipped an ability that aborts on activation — authored-but-unrun tests miss runtime faults.',
+          '<span class="bullet-lead">Blind five-lens scoring:</span> one model pinned across every arm: the kit scored <strong>66 on ~174k output tokens</strong>; the third-party stack, <strong>60 on ~210k</strong>.',
+          '<span class="bullet-lead">Beaten on quality, not cost:</span> a dynamic multi-agent workflow scored <strong>80</strong> at roughly <strong>3.2×</strong> the kit’s tokens. One task, one run per arm — indicative, not policy.',
+          '<span class="bullet-lead">Failure disclosed:</span> my own arm initially skipped its review loop — a self-handicap in my own bake-off — then re-ran at equal rigor with seven fairness controls.'
+        ] },
       ]
     },
 
@@ -252,7 +303,7 @@ window.PROJECTS.ai = {
       type: 'prose',
       title: 'Mission Control',
       blocks: [
-        { type: 'paragraph', html: '<div class="proj-eyebrow">// 05 — Planning, Tracking, Flying</div><p>Work too big for one session gets charted before it gets started. A large initiative becomes a map of typed decision tickets (research, prototype, requirements interrogation, task) with dependencies between them, so the next actionable piece is always identifiable. Parts of the map that genuinely can’t be specified yet are marked as open fog and left that way until they can be answered, and the working set is the frontier: the tickets that are open and unblocked right now. The method is adapted from a published practice, not one I invented.</p>' },
+        { type: 'paragraph', html: '<div class="proj-eyebrow">// 06 — Planning, Tracking, Flying</div><p>Work too big for one session gets charted before it gets started. A large initiative becomes a map of typed decision tickets (research, prototype, requirements interrogation, task) with dependencies between them, so the next actionable piece is always identifiable. Parts of the map that genuinely can’t be specified yet are marked as open fog and left that way until they can be answered, and the working set is the frontier: the tickets that are open and unblocked right now. The method is adapted from a published practice, not one I invented.</p>' },
         { type: 'paragraph', html: '<p>Linear is the tracker of record. It holds <strong>76 imported GitHub issues</strong>, and branch names in the rebuild’s git history are keyed to Linear tickets, so a commit traces back to the decision that asked for it.</p>' },
         { type: 'paragraph', html: '<p>Cockpit is the desktop app I built to fly all of this: an Electron mission-control surface with live Linear project and task panes, embedded Claude terminal sessions (one per project, with a tab strip and per-session activity states), and a star-map renderer of the work-map dependency graph. It is deliberately <strong>read-only toward Linear</strong>: the cockpit displays, the pilot acts. Every write flows through the terminal, where I can see it. Cockpit was built end to end in a single session and flown the next day; it’s a young tool, and I won’t call it a daily driver yet.</p>' },
         { type: 'paragraph', html:
