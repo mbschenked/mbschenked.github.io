@@ -268,6 +268,7 @@
     teardownScrollSpy();
     teardownHeroCanvas();
     teardownHeroScrollObs();
+    teardownCockpit();
     pauseLiveVideos();
     heroMount.innerHTML = '';
     contentMount.innerHTML = '';
@@ -293,6 +294,7 @@
     trackLiveVideos(heroMount);
     trackLiveVideos(contentMount);
     wirePreviewTriggers(contentMount);
+    wireCockpit(contentMount);
   }
 
   // ── Hero banner ──────────────────────────────────────────────────────────
@@ -755,6 +757,14 @@
         p.innerHTML = block.html || '';
         return p;
       }
+      // Full-bleed block. Unlike 'paragraph' this is NOT wrapped in
+      // .section-prose, so it escapes that rule's 70ch clamp — needed for
+      // wide figures and interactive widgets that must use the whole column.
+      case 'widget': {
+        var w = el('div', { class: 'section-widget' });
+        w.innerHTML = block.html || '';
+        return w;
+      }
       case 'list': {
         var ul = el('ul', { class: 'prose-list' });
         (block.items || []).forEach(function (item) {
@@ -1180,6 +1190,7 @@
     teardownHeroScrollObs();
     pauseLiveVideos();
     teardownHeroCanvas();
+    teardownCockpit();
     heroMount.innerHTML = '';
     contentMount.innerHTML = '';
     sidebarMount.innerHTML = '';
@@ -1389,6 +1400,821 @@
         });
       })(triggers[i]);
     }
+  }
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // Cockpit widget (#ai §5)
+  // ═════════════════════════════════════════════════════════════════════════
+  // A recreation of the Cockpit desktop app. Everything is already in the DOM
+  // at first paint — this only adds behaviour, so with JS off the widget is
+  // still a complete, readable console panel.
+  //
+  // Nothing autoplays. Every state change needs a click, which is the point:
+  // the app's own thesis is "the cockpit displays, the pilot acts". The close
+  // replay HALTS on the confirm line and cannot finish without a human, the
+  // same way /workbench close will not write until Max confirms the delta.
+
+  var cockpit = null;   // { root, timers[], observer, script, idx, reduced }
+
+  var CP_STEP_MS = 90;              // per-line reveal stagger
+  var CP_PAD_PATH = '"D:\\ClaudeCode\\workbench\\cockpit\\drawings\\drawing-2026-08-12T21-33-22-118Z.png"';
+
+  function teardownCockpit() {
+    if (!cockpit) return;
+    for (var i = 0; i < cockpit.timers.length; i++) clearTimeout(cockpit.timers[i]);
+    if (cockpit.observer) cockpit.observer.disconnect();
+    // The pan handlers live on window, not on the discarded DOM, so they are
+    // the one thing that would actually survive a route change.
+    if (cockpit.map) {
+      window.removeEventListener('pointermove', cockpit.map.onMove);
+      window.removeEventListener('pointerup', cockpit.map.onUp);
+    }
+    if (cockpit.pad) window.removeEventListener('pointerup', cockpit.pad.onUp);
+    cockpit = null;
+  }
+
+  function wireCockpit(rootEl) {
+    var root = rootEl && rootEl.querySelector('.cp');
+    if (!root) return;                       // no-op on #tog / #tbh
+    teardownCockpit();
+
+    cockpit = {
+      root: root,
+      timers: [],
+      observer: null,
+      script: null,
+      idx: 0,
+      reduced: !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+    };
+
+    root.addEventListener('click', function (ev) {
+      var tab = ev.target.closest ? ev.target.closest('.cp-tab') : null;
+      if (tab && !tab.classList.contains('cp-tab--plus')) return selectTab(root, tab);
+
+      var task = ev.target.closest ? ev.target.closest('.cp-task') : null;
+      if (task) return selectTask(root, task);
+
+      var padBtn = ev.target.closest ? ev.target.closest('.cp-btn--pad') : null;
+      if (padBtn) return togglePad(root, padBtn);
+
+      var toolBtn = ev.target.closest ? ev.target.closest('.cp-sw, .cp-tool') : null;
+      if (toolBtn) return padTool(root, toolBtn);
+
+      var shard = ev.target.closest ? ev.target.closest('.cp-shard') : null;
+      if (shard) return selectShard(root, shard.getAttribute('data-num'));
+
+      var fit = ev.target.closest ? ev.target.closest('.cp-map-fit') : null;
+      if (fit && cockpit.map) return cockpit.map.fitAll();
+
+      var send = ev.target.closest ? ev.target.closest('.cp-pad-send') : null;
+      if (send) return sendDrawing(root);
+
+      var confirm = ev.target.closest ? ev.target.closest('.cp-confirm') : null;
+      if (confirm) return resumeScript(root);
+
+      var cmd = ev.target.closest ? ev.target.closest('.cp-cmd') : null;
+      if (cmd) return runScript(root, cmd.getAttribute('data-script'));
+    });
+
+    labelCockpit(root);
+    wirePad(root);
+    wireStarmap(root);
+
+    // Leaving the viewport mid-replay would strand a half transcript on a
+    // reader who scrolls back. Cancel the timers and complete it instead.
+    if (typeof IntersectionObserver === 'function') {
+      cockpit.observer = new IntersectionObserver(function (entries) {
+        for (var i = 0; i < entries.length; i++) {
+          if (!entries[i].isIntersecting) leaveScript(root);
+        }
+      }, { threshold: 0 });
+      cockpit.observer.observe(root);
+    }
+  }
+
+  // ── accessible names ─────────────────────────────────────────────────────
+  // Both the tab dot-state and the task type-glyph carry meaning through shape
+  // and colour alone. Composed here rather than in the markup so the strings
+  // cannot drift from the visible text, and so a state flip relabels itself.
+  var CP_STATE_TEXT = {
+    computing: 'computing, output flowing',
+    ready: 'ready, finished and not yet viewed',
+    idle: 'idle, quiet and acknowledged',
+    shell: 'shell, no claude session here'
+  };
+  var CP_TYPE_TEXT = {
+    'cp-type--research': 'research',
+    'cp-type--prototype': 'prototype',
+    'cp-type--grilling': 'grilling',
+    'cp-type--task': 'task'
+  };
+
+  function labelTab(tab) {
+    var state = tab.getAttribute('data-state');
+    var text = CP_STATE_TEXT[state];
+    tab.setAttribute('aria-label', (tab.getAttribute('data-label') || '') + (text ? ' — ' + text : ''));
+  }
+
+  function labelCockpit(root) {
+    var tabs = root.querySelectorAll('.cp-tab[data-state]');
+    for (var i = 0; i < tabs.length; i++) labelTab(tabs[i]);
+
+    var tasks = root.querySelectorAll('.cp-task');
+    for (var j = 0; j < tasks.length; j++) {
+      var glyph = tasks[j].querySelector('.cp-type');
+      var type = '';
+      if (glyph) {
+        for (var k in CP_TYPE_TEXT) {
+          if (glyph.classList.contains(k)) { type = CP_TYPE_TEXT[k] + ' — '; break; }
+        }
+      }
+      var title = tasks[j].querySelector('.cp-task-title');
+      var id = tasks[j].querySelector('.cp-task-id');
+      tasks[j].setAttribute('aria-label',
+        type + (title ? title.textContent : '') + (id ? ', ' + id.textContent : ''));
+    }
+  }
+
+  // ── tab strip ────────────────────────────────────────────────────────────
+  function selectTab(root, tab) {
+    var tabs = root.querySelectorAll('.cp-tab');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.remove('is-active');
+      if (tabs[i].hasAttribute('aria-pressed')) tabs[i].setAttribute('aria-pressed', 'false');
+    }
+    tab.classList.add('is-active');
+    tab.setAttribute('aria-pressed', 'true');
+
+    // Real behaviour: "ready" means it finished and you have not looked yet.
+    // Focusing the tab acknowledges it, and the gold drops to idle.
+    if (tab.getAttribute('data-state') === 'ready') tab.setAttribute('data-state', 'idle');
+    labelTab(tab);
+
+    var label = root.querySelector('[data-role="session-label"]');
+    if (label) label.textContent = tab.getAttribute('data-label') || '';
+  }
+
+  // ── task rows ────────────────────────────────────────────────────────────
+  function selectTask(root, task) {
+    var rows = root.querySelectorAll('.cp-task');
+    for (var i = 0; i < rows.length; i++) rows[i].classList.remove('is-selected');
+    task.classList.add('is-selected');
+    var note = root.querySelector('.cp-note');
+    if (note) note.hidden = false;
+
+    var id = task.querySelector('.cp-task-id');
+    if (id) selectShard(root, id.textContent);
+  }
+
+  // ── drawing pad ──────────────────────────────────────────────────────────
+  function togglePad(root, btn) {
+    var pad = root.querySelector('.cp-pad');
+    if (!pad) return;
+    var open = pad.hidden;
+    pad.hidden = !open;
+    if ('inert' in pad) pad.inert = !open;
+    btn.setAttribute('aria-pressed', open ? 'true' : 'false');
+
+    // drawpad.js re-captures getFocusedSessionId() on every open, so the pad
+    // is always paired to whatever session you were looking at. Showing a
+    // target that disagrees with the active tab would demonstrate a paste
+    // landing somewhere the pad says it is not pointing.
+    if (open) {
+      var target = pad.querySelector('.cp-pad-target');
+      var active = root.querySelector('.cp-tab.is-active');
+      if (target && active) target.textContent = '→ ' + (active.getAttribute('data-label') || '');
+    }
+  }
+
+  var CP_ERASER = '#ffffff';
+  var CP_UNDO_CAP = 15;                    // drawpad.js's cap, not a guess
+
+  function wirePad(root) {
+    var cv = root.querySelector('.cp-pad-cv');
+    if (!cv || !cockpit) return;
+    // willReadFrequently because every stroke snapshots the canvas for undo —
+    // without it Chrome warns and the readback goes through the GPU path.
+    var ctx = cv.getContext('2d', { willReadFrequently: true });
+    var pad = { cv: cv, ctx: ctx, color: '#111111', width: 5, eraser: false, undo: [], ink: false, drawing: false };
+    cockpit.pad = pad;
+
+    pad.fillWhite = function () { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cv.width, cv.height); };
+    pad.fillWhite();
+
+    // Snapshots carry the ink flag with them — undo must restore both, or the
+    // pad can send a blank canvas (undo to blank) or refuse a visible one
+    // (undo past a clear). Straight out of the real pad's own reasoning.
+    pad.pushUndo = function () {
+      pad.undo.push({ image: ctx.getImageData(0, 0, cv.width, cv.height), hadInk: pad.ink });
+      if (pad.undo.length > CP_UNDO_CAP) pad.undo.shift();
+    };
+
+    var swatches = root.querySelectorAll('.cp-sw');
+    for (var i = 0; i < swatches.length; i++) {
+      swatches[i].style.background = swatches[i].getAttribute('data-color');
+    }
+
+    function at(ev) {
+      var r = cv.getBoundingClientRect();
+      return { x: (ev.clientX - r.left) * (cv.width / r.width),
+               y: (ev.clientY - r.top) * (cv.height / r.height) };
+    }
+
+    cv.addEventListener('pointerdown', function (ev) {
+      if (ev.button !== 0) return;
+      pad.drawing = true;
+      // Capture keeps a stroke alive when the cursor leaves the canvas. It can
+      // throw for already-released pointers — non-fatal, just draw uncaptured.
+      try { cv.setPointerCapture(ev.pointerId); } catch (e) { /* no capture */ }
+      pad.pushUndo();
+      pad.ink = true;
+      var p = at(ev);
+      ctx.strokeStyle = pad.eraser ? CP_ERASER : pad.color;
+      ctx.lineWidth = pad.eraser ? pad.width * 3 : pad.width;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x + 0.01, p.y + 0.01);   // a click with no drag still leaves a dot
+      ctx.stroke();
+    });
+    cv.addEventListener('pointermove', function (ev) {
+      if (!pad.drawing) return;
+      var p = at(ev);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    });
+    // Release is bound on window, not the canvas. If setPointerCapture threw
+    // above, a release that happens off-canvas would never reach `cv`, leaving
+    // drawing=true — and the next hover would trail a stray line in from
+    // wherever the stroke was abandoned.
+    pad.onUp = function () { pad.drawing = false; };
+    cv.addEventListener('pointercancel', pad.onUp);
+    window.addEventListener('pointerup', pad.onUp);
+  }
+
+  function markPadTools(root) {
+    var pad = cockpit && cockpit.pad;
+    if (!pad) return;
+    var sws = root.querySelectorAll('.cp-sw');
+    for (var i = 0; i < sws.length; i++) {
+      sws[i].classList.toggle('is-on', !pad.eraser && sws[i].getAttribute('data-color') === pad.color);
+    }
+    var tools = root.querySelectorAll('.cp-tool[data-width]');
+    for (var j = 0; j < tools.length; j++) {
+      tools[j].classList.toggle('is-on', Number(tools[j].getAttribute('data-width')) === pad.width);
+    }
+    var er = root.querySelector('.cp-tool[data-act="eraser"]');
+    if (er) er.classList.toggle('is-on', pad.eraser);
+    pad.cv.classList.toggle('is-eraser', pad.eraser);
+  }
+
+  function padTool(root, btn) {
+    var pad = cockpit && cockpit.pad;
+    if (!pad) return;
+    var act = btn.getAttribute('data-act');
+    var w = btn.getAttribute('data-width');
+    var color = btn.getAttribute('data-color');
+
+    if (color) { pad.color = color; pad.eraser = false; }
+    else if (w) { pad.width = Number(w); }
+    else if (act === 'eraser') { pad.eraser = !pad.eraser; }
+    else if (act === 'undo') {
+      var snap = pad.undo.pop();
+      if (snap) { pad.ctx.putImageData(snap.image, 0, 0); pad.ink = snap.hadInk; }
+    } else if (act === 'clear') {
+      pad.pushUndo();
+      pad.fillWhite();
+      pad.ink = false;
+    }
+    markPadTools(root);
+  }
+
+  // Enter in the real pad saves a PNG and pastes its quoted path into the
+  // paired session's input line WITHOUT a newline — the prompt is left
+  // uncommitted so the human types their words around it and submits.
+  function sendDrawing(root) {
+    var val = root.querySelector('.cp-input-val');
+    var pad = cockpit && cockpit.pad;
+    if (!val || !pad) return;
+
+    // A blank canvas has nothing to save. The real pad tracks ink for exactly
+    // this and flashes the target label instead of writing an empty PNG.
+    if (!pad.ink) {
+      var target = root.querySelector('.cp-pad-target');
+      if (target) {
+        target.classList.add('is-flash');
+        cockpit.timers.push(setTimeout(function () { target.classList.remove('is-flash'); }, 600));
+      }
+      return;
+    }
+
+    var gallery = root.querySelector('.cp-pad-gallery');
+    if (gallery) {
+      var thumb = document.createElement('canvas');
+      thumb.width = 52; thumb.height = 30;
+      thumb.className = 'cp-thumb';
+      thumb.getContext('2d').drawImage(pad.cv, 0, 0, thumb.width, thumb.height);
+      gallery.appendChild(thumb);
+      while (gallery.childNodes.length > 4) gallery.removeChild(gallery.firstChild);
+    }
+
+    val.textContent = CP_PAD_PATH;
+    // A sent drawing is committed — the app drops the undo history with it, so
+    // you cannot undo your way back into a canvas that has already been saved.
+    pad.fillWhite();
+    pad.undo.length = 0;
+    pad.ink = false;
+  }
+
+  // ── star map: the "Data Shards" tree ─────────────────────────────────────
+  // Facts in, derivation here — the same contract starmap-data.js keeps with
+  // starmap.js. This is the WorkBench Overhaul chart: Cockpit's own build,
+  // which is the project Cockpit's star map was first flown against.
+  //
+  // Every node, type, status and EDGE below is a live Linear fact. The types
+  // are the tickets' wayfinder: labels, the statuses their workflow states,
+  // and the edges their native blocks / blockedBy relations under the
+  // `wayfinder:map` issue TOG-101 — which is what starmap-data.js reads. Rank,
+  // frontier, blocked, satisfied and the counts are all derived below, never
+  // authored. (An earlier draft charted UnrealBossMaker, which has no
+  // blocks/blockedBy at all — the real app renders that project as one flat
+  // band with no lanes, so drawing it as a tree would have shown an output the
+  // app cannot produce.)
+  var CP_MAP = {
+    destination: 'A working v1 desktop app — Cockpit — running on Max’s Windows machine: scrollable project list fed live from Linear (recent first), embedded Claude terminal center, star map panel right, task list with wayfinder type icons/colors below the projects, click-to-focus on the map. Proven by flying it against a real project.',
+    nodes: [
+      { num: 'TOG-102', type: 'research',  status: 'resolved', title: 'Cockpit-node-pty Electron matrix verify-1' },
+      { num: 'TOG-103', type: 'task',      status: 'resolved', title: 'Cockpit-Electron shell scaffold-2' },
+      { num: 'TOG-104', type: 'task',      status: 'resolved', title: 'Cockpit-Linear GraphQL client-3' },
+      { num: 'TOG-115', type: 'task',      status: 'open',     title: 'Cockpit-subagent delegation signal-11' },
+      { num: 'TOG-105', type: 'task',      status: 'resolved', title: 'Cockpit-project + task list panels-4' },
+      { num: 'TOG-106', type: 'task',      status: 'resolved', title: 'Cockpit-star map panel-5' },
+      { num: 'TOG-107', type: 'task',      status: 'resolved', title: 'Cockpit-terminal pane-6' },
+      { num: 'TOG-108', type: 'task',      status: 'resolved', title: 'Cockpit-selection sync-7' },
+      { num: 'TOG-113', type: 'task',      status: 'resolved', title: 'Cockpit-terminal split panes-9' },
+      { num: 'TOG-114', type: 'task',      status: 'open',     title: 'Cockpit-galaxy view-10' },
+      { num: 'TOG-109', type: 'prototype', status: 'open',     title: 'Cockpit-v1 assembly-8' }
+    ],
+    edges: [
+      { from: 'TOG-103', to: 'TOG-105' }, { from: 'TOG-103', to: 'TOG-106' }, { from: 'TOG-103', to: 'TOG-107' },
+      { from: 'TOG-104', to: 'TOG-105' }, { from: 'TOG-102', to: 'TOG-107' },
+      { from: 'TOG-105', to: 'TOG-108' }, { from: 'TOG-106', to: 'TOG-108' }, { from: 'TOG-106', to: 'TOG-114' },
+      { from: 'TOG-107', to: 'TOG-113' }, { from: 'TOG-107', to: 'TOG-109' }, { from: 'TOG-108', to: 'TOG-109' }
+    ],
+    // The five bold-lead bullets under TOG-101's "## Not yet specified" —
+    // the exact shape parseFog() matches.
+    fog: ['Claim-from-UI.', 'Refresh model revisit.', '.plan local-tracker support.', 'Bench ↔ Cockpit integration.', 'Packaging/installer.']
+  };
+
+  // Card geometry. NODE_W/NODE_H must stay in lockstep with --sh-w/--sh-h in
+  // styles.css or the lane endpoints drift off the cards.
+  var NODE_W = 140, NODE_H = 84, SLOT_W = 164, ROW_GAP = 54, TOP_MARGIN = 42;
+  var FOG_W = 118, FOG_H = 52, FOG_DROP = 44, SIDE_MARGIN = 20;
+  // Below this the opening view is a grey smear, so the map opens legible and
+  // lets the overflow be panned to. The fit button still zooms all the way out.
+  var READABLE_K = 0.62;
+  var SWEEPS = 6;
+
+  var CP_STATUS_LABEL = { frontier: 'FRONTIER', claimed: 'CLAIMED', resolved: 'RESOLVED', blocked: 'BLOCKED', husk: 'OUT OF SCOPE' };
+  var CP_TYPE_GLYPH = { research: 'RSCH', prototype: 'PROTO', grilling: 'GRILL', task: 'TASK' };
+  var CP_LEGEND = [
+    ['frontier', 'frontier'], ['claimed', 'claimed'], ['resolved', 'resolved'],
+    ['blocked', 'blocked'], ['husk', 'out of scope'], ['fog', 'fog']
+  ];
+  var CP_LEGEND_COLOR = {
+    frontier: '#ffc94d', claimed: '#e89a4b', resolved: '#c7d8ee',
+    blocked: '#b05252', husk: '#6b7280', fog: '#9a7fd4'
+  };
+
+  function cpClosed(n) { return n.status === 'resolved' || n.status === 'out_of_scope'; }
+
+  function cpStyleKey(n) {
+    if (n.status === 'out_of_scope') return 'husk';
+    if (n.status === 'resolved') return 'resolved';
+    if (n.status === 'claimed') return 'claimed';
+    return n.frontier ? 'frontier' : 'blocked';
+  }
+
+  // Orthogonal route with a bevelled mid-turn — the map's chamfer language
+  // applied to the lanes so edges read as circuitry, not curves.
+  function cpLanePath(x1, y1, x2, y2) {
+    var midY = (y1 + y2) / 2;
+    var dx = x2 - x1;
+    if (Math.abs(dx) < 2) return 'M' + x1 + ',' + y1 + ' L' + x2 + ',' + y2;
+    var dir = dx >= 0 ? 1 : -1;
+    var span = Math.abs(midY - y1) - 4;
+    var bevel = Math.min(16, Math.abs(dx) / 2, span > 0 ? span : 6);
+    bevel = Math.max(5, bevel);
+    return 'M' + x1 + ',' + y1 +
+      ' L' + x1 + ',' + (midY - bevel) +
+      ' L' + (x1 + dir * bevel) + ',' + midY +
+      ' L' + (x2 - dir * bevel) + ',' + midY +
+      ' L' + x2 + ',' + (midY + bevel) +
+      ' L' + x2 + ',' + y2;
+  }
+
+  function cpDerive(g) {
+    var by = {}, i;
+    for (i = 0; i < g.nodes.length; i++) { by[g.nodes[i].num] = g.nodes[i]; g.nodes[i].blockers = []; g.nodes[i].dependents = []; }
+    g.live = [];
+    for (i = 0; i < g.edges.length; i++) {
+      var from = by[g.edges[i].from], to = by[g.edges[i].to];
+      if (!from || !to || from === to) continue;   // malformed edges skipped, never thrown
+      to.blockers.push(from);
+      from.dependents.push(to);
+      g.live.push({ from: from, to: to, satisfied: cpClosed(from) });
+    }
+    for (i = 0; i < g.nodes.length; i++) {
+      var n = g.nodes[i];
+      var liveBlockers = n.blockers.filter(function (b) { return !cpClosed(b); });
+      n.blocked = n.status === 'open' && liveBlockers.length > 0;
+      n.frontier = n.status === 'open' && !n.claimed_by && liveBlockers.length === 0;
+    }
+    // Band = longest blocker chain depth, so a shard always sits below
+    // everything that has to finish first.
+    //
+    // Memoised, with the cycle guard tracking the CURRENT PATH rather than
+    // everything visited. A shared visited-set is wrong here: this is a DAG,
+    // not a tree, so a node legitimately reached twice by different branches
+    // (a diamond — A→B, A→C, B→C, B→D, C→D) would have its second visit
+    // short-circuited to 0 and collapse the band it belongs in.
+    var memo = {};
+    function depth(n, path) {
+      if (memo[n.num] !== undefined) return memo[n.num];
+      if (!n.blockers.length) { memo[n.num] = 0; return 0; }
+      if (path[n.num]) return 0;               // genuine cycle — break, don't memoise
+      path[n.num] = true;
+      var d = 0;
+      for (var k = 0; k < n.blockers.length; k++) d = Math.max(d, depth(n.blockers[k], path) + 1);
+      path[n.num] = false;
+      memo[n.num] = d;
+      return d;
+    }
+    for (i = 0; i < g.nodes.length; i++) g.nodes[i].rank = depth(g.nodes[i], {});
+    g.by = by;
+    return g;
+  }
+
+  function cpLayout(g) {
+    var ranks = [], i;
+    for (i = 0; i < g.nodes.length; i++) {
+      (ranks[g.nodes[i].rank] = ranks[g.nodes[i].rank] || []).push(g.nodes[i]);
+    }
+    // Six barycenter sweeps, alternating direction: even passes order a band by
+    // the mean column of its blockers, odd passes by its dependents. This is
+    // what stops lanes crossing, and it means the column order is computed
+    // rather than being whatever order the nodes happened to be listed in.
+    var col = {};
+    for (i = 0; i < ranks.length; i++) {
+      for (var c = 0; c < ranks[i].length; c++) { ranks[i][c].ord = c; col[ranks[i][c].num] = c; }
+    }
+    function bary(node, up) {
+      var refs = up ? node.blockers : node.dependents;
+      if (!refs.length) return node.ord;
+      var sum = 0;
+      for (var q = 0; q < refs.length; q++) sum += col[refs[q].num];
+      return sum / refs.length;
+    }
+    for (var s = 0; s < SWEEPS; s++) {
+      var up = s % 2 === 0;
+      for (i = 0; i < ranks.length; i++) {
+        var band = ranks[up ? i : ranks.length - 1 - i];
+        for (var b = 0; b < band.length; b++) band[b]._bary = bary(band[b], up);
+        band.sort(function (p, q2) { return (p._bary - q2._bary) || (p.ord - q2.ord) || (p.num < q2.num ? -1 : 1); });
+        for (var d2 = 0; d2 < band.length; d2++) { band[d2].ord = d2; col[band[d2].num] = d2; }
+      }
+    }
+
+    var maxSlots = 0;
+    for (i = 0; i < ranks.length; i++) maxSlots = Math.max(maxSlots, (ranks[i] || []).length);
+    var widest = maxSlots * SLOT_W - (SLOT_W - NODE_W);
+    var width = widest + SIDE_MARGIN * 2;
+    var pitch = NODE_H + ROW_GAP;
+    var pos = {};
+
+    for (i = 0; i < ranks.length; i++) {
+      var row = ranks[i] || [];
+      var bandW = row.length * SLOT_W - (SLOT_W - NODE_W);
+      var x0 = SIDE_MARGIN + (widest - bandW) / 2;
+      for (var j = 0; j < row.length; j++) {
+        var frontier = row[j].frontier;
+        pos[row[j].num] = {
+          left: x0 + j * SLOT_W - (frontier ? 7 : 0),
+          top: TOP_MARGIN + i * pitch - (frontier ? 5 : 0),
+          w: NODE_W + (frontier ? 14 : 0),
+          h: NODE_H + (frontier ? 10 : 0)
+        };
+      }
+    }
+
+    var fogTop = TOP_MARGIN + ranks.length * pitch + FOG_DROP;
+    var fogPos = [];
+    var fogW = g.fog.length * (FOG_W + 20) - 20;
+    for (i = 0; i < g.fog.length; i++) {
+      fogPos.push({ left: SIDE_MARGIN + (widest - fogW) / 2 + i * (FOG_W + 20), top: fogTop, title: g.fog[i] });
+    }
+
+    return { pos: pos, fogPos: fogPos, ranks: ranks, pitch: pitch, width: width, height: fogTop + FOG_H + 20 };
+  }
+
+  function wireStarmap(root) {
+    var mapEl = root.querySelector('.cp-map');
+    if (!mapEl || !cockpit) return;
+    var stage = mapEl.querySelector('.cp-stage');
+    var svg = mapEl.querySelector('.cp-lanes');
+    var viewport = mapEl.querySelector('.cp-viewport');
+    var ph = mapEl.querySelector('.cp-map-ph');
+    if (!stage || !svg || !viewport) return;
+
+    var g = cpDerive(CP_MAP);
+    var L = cpLayout(g);
+    var map = { el: mapEl, stage: stage, svg: svg, viewport: viewport, g: g, L: L, k: 1, x: 0, y: 0, shards: {}, lanes: [], selected: null };
+    cockpit.map = map;
+
+    stage.style.width = L.width + 'px';
+    stage.style.height = L.height + 'px';
+    svg.setAttribute('width', L.width);
+    svg.setAttribute('height', L.height);
+    svg.setAttribute('viewBox', '0 0 ' + L.width + ' ' + L.height);
+
+    var i, j;
+
+    // LEVEL bands
+    for (i = 0; i < L.ranks.length; i++) {
+      var band = document.createElement('div');
+      band.className = 'cp-band';
+      band.style.top = (TOP_MARGIN + i * L.pitch - 20) + 'px';
+      band.style.width = L.width + 'px';
+      band.innerHTML = '<span class="cp-band-label">Level <b>' + i + '</b></span>';
+      stage.appendChild(band);
+    }
+
+    // Lanes first so shards paint over them.
+    for (i = 0; i < g.live.length; i++) {
+      var e = g.live[i];
+      var fp = L.pos[e.from.num], tp = L.pos[e.to.num];
+      if (!fp || !tp) continue;
+      var outIdx = e.from.dependents.indexOf(e.to), outN = e.from.dependents.length;
+      var inIdx = e.to.blockers.indexOf(e.from), inN = e.to.blockers.length;
+      // Per-node width, not the constant: a frontier shard is 14px wider, and
+      // the fan-out has to spread across the card that is actually drawn.
+      var spreadOut = Math.min(34, fp.w * 0.55 / Math.max(1, outN));
+      var spreadIn = Math.min(34, tp.w * 0.55 / Math.max(1, inN));
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', cpLanePath(
+        fp.left + fp.w / 2 + (outIdx - (outN - 1) / 2) * spreadOut, fp.top + fp.h,
+        tp.left + tp.w / 2 + (inIdx - (inN - 1) / 2) * spreadIn, tp.top
+      ));
+      // A lane is BLOCKING, not merely unsatisfied, when its dependent is
+      // actually held up by it. A satisfied edge is not just history — the app
+      // lights it and runs a flow along it, because a cleared dependency is
+      // the map showing you the route you already walked.
+      path.setAttribute('class', 'cp-lane' +
+        (e.satisfied ? ' cp-lane--satisfied' : (e.to.blocked ? ' cp-lane--blocking' : '')));
+      svg.appendChild(path);
+      map.lanes.push({ el: path, from: e.from.num, to: e.to.num });
+    }
+
+    // Shards
+    for (i = 0; i < g.nodes.length; i++) {
+      var n = g.nodes[i];
+      var key = cpStyleKey(n);
+      var p = L.pos[n.num];
+      var el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'cp-shard cp-shard--' + key + ' cp-shard--ty-' + n.type;
+      el.style.left = p.left + 'px';
+      el.style.top = p.top + 'px';
+      el.setAttribute('data-num', n.num);
+      el.setAttribute('aria-label', n.type + ' — ' + n.title + ', ' + n.num + ', ' + CP_STATUS_LABEL[key].toLowerCase());
+      el.innerHTML =
+        '<span class="cp-sh-stripe" aria-hidden="true"></span>' +
+        '<span class="cp-sh-row1"><span class="cp-sh-num">' + n.num + '</span>' +
+        '<span class="cp-sh-status">' + CP_STATUS_LABEL[key] + '</span></span>' +
+        '<span class="cp-sh-title">' + n.title + '</span>' +
+        '<span class="cp-sh-foot"><span class="cp-sh-glyph">' + (CP_TYPE_GLYPH[n.type] || 'TASK') + '</span></span>';
+      stage.appendChild(el);
+      map.shards[n.num] = el;
+    }
+
+    // Fog rim — patches named but not yet specified, faded, never hidden.
+    if (L.fogPos.length) {
+      var rim = document.createElement('span');
+      rim.className = 'cp-fogrim';
+      rim.style.top = (L.fogPos[0].top - 16) + 'px';
+      rim.textContent = 'Fog rim — not yet specified';
+      stage.appendChild(rim);
+      for (i = 0; i < L.fogPos.length; i++) {
+        var ghost = document.createElement('button');
+        ghost.type = 'button';
+        ghost.className = 'cp-ghost';
+        ghost.style.left = L.fogPos[i].left + 'px';
+        ghost.style.top = L.fogPos[i].top + 'px';
+        ghost.setAttribute('aria-label', 'fog — ' + L.fogPos[i].title);
+        ghost.innerHTML = '<span class="cp-sh-num">FOG</span><span class="cp-sh-title">' + L.fogPos[i].title + '</span>';
+        stage.appendChild(ghost);
+      }
+    }
+
+    // Destination is the first line of the map issue's "## Destination"
+    // section, exactly as starmap-data.js resolves it — long by nature, and
+    // clamped by CSS rather than pre-shortened here.
+    var destEl = mapEl.querySelector('.cp-hud-dest');
+    if (destEl && g.destination) destEl.textContent = g.destination;
+
+    // HUD counts are derived, never authored.
+    var counts = { resolved: 0, claimed: 0, open: 0 };
+    for (i = 0; i < g.nodes.length; i++) counts[g.nodes[i].status === 'claimed' ? 'claimed' : g.nodes[i].status]++;
+    var countsEl = mapEl.querySelector('.cp-hud-counts');
+    if (countsEl) {
+      countsEl.innerHTML = '<b>' + counts.resolved + '</b>&#10003; <b>' + counts.claimed + '</b>&#9935; <b>' + counts.open + '</b>&#9675;' +
+        ' <span class="cp-hud-bar"><i style="width:' + Math.round(100 * counts.resolved / g.nodes.length) + '%"></i></span>';
+    }
+
+    var legendEl = mapEl.querySelector('.cp-map-legend');
+    if (legendEl) {
+      var html = '';
+      for (i = 0; i < CP_LEGEND.length; i++) {
+        html += '<span><i style="background:' + CP_LEGEND_COLOR[CP_LEGEND[i][0]] + '"></i>' + CP_LEGEND[i][1] + '</span>';
+      }
+      // The two lane rows are the legend's only explanation of the edge
+      // grammar — without them the colours mean nothing.
+      html += '<span><i class="cp-lg-block"></i>blocking</span>' +
+              '<span><i class="cp-lg-done"></i>cleared</span>';
+      legendEl.innerHTML = html;
+    }
+
+    if (ph) ph.hidden = true;
+
+    map.fitAll = function () {
+      var r = viewport.getBoundingClientRect();
+      var k = Math.min((r.width - 12) / L.width, (r.height - 12) / L.height);
+      applyView(map, k, (r.width - L.width * k) / 2, 6);
+    };
+    // Opening view, matching the app's fit(): an overflowing axis anchors at
+    // the start rather than centring, so the ROOT of the tree is on screen
+    // instead of its middle. Below READABLE_K the type is a grey smear, so the
+    // map opens legible and lets the overflow be dragged to; the fit button
+    // still zooms all the way out. Centring on a node is selection-driven
+    // only (see selectShard), never the opening state.
+    map.open = function () {
+      var r = viewport.getBoundingClientRect();
+      var fit = Math.min((r.width - 12) / L.width, (r.height - 12) / L.height);
+      var k = Math.max(fit, READABLE_K);
+      var w = L.width * k, h = L.height * k;
+      applyView(map, k, w > r.width ? 0 : (r.width - w) / 2, h > r.height ? 0 : (r.height - h) / 2);
+    };
+    map.open();
+
+    // Pan. The map opens wider than the pane on purpose, so dragging is the
+    // only way to reach the far bands without zooming the type into a smear.
+    var drag = null;
+    map.onDown = function (ev) {
+      if (ev.target.closest && ev.target.closest('.cp-shard, .cp-ghost')) return;
+      drag = { x: ev.clientX, y: ev.clientY, ox: map.x, oy: map.y };
+      viewport.classList.add('is-grabbing');
+    };
+    map.onMove = function (ev) {
+      if (!drag) return;
+      applyView(map, map.k, drag.ox + (ev.clientX - drag.x), drag.oy + (ev.clientY - drag.y));
+    };
+    map.onUp = function () { drag = null; viewport.classList.remove('is-grabbing'); };
+
+    viewport.addEventListener('pointerdown', map.onDown);
+    window.addEventListener('pointermove', map.onMove);
+    window.addEventListener('pointerup', map.onUp);
+  }
+
+  function applyView(map, k, x, y) {
+    map.k = k; map.x = x; map.y = y;
+    map.stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + k + ')';
+  }
+
+  // Selection sync: the task list and the map are two views of one ticket, so
+  // selecting in either lights the other. The real pane's focusNode(num) API
+  // exists for exactly this.
+  function selectShard(root, num) {
+    var map = cockpit && cockpit.map;
+    if (!map) return;
+    var el = map.shards[num];
+    var i;
+    for (i in map.shards) map.shards[i].classList.toggle('is-selected', i === num);
+    for (i = 0; i < map.lanes.length; i++) {
+      map.lanes[i].el.classList.toggle('is-hot', map.lanes[i].from === num || map.lanes[i].to === num);
+    }
+    map.selected = el ? num : null;
+
+    var rows = root.querySelectorAll('.cp-task');
+    for (i = 0; i < rows.length; i++) {
+      var id = rows[i].querySelector('.cp-task-id');
+      rows[i].classList.toggle('is-selected', !!id && id.textContent === num);
+    }
+
+    // Centre the shard the way focusNode does, so a selection made in the task
+    // list is actually visible even when it sits outside the opening view.
+    if (el) {
+      var r = map.viewport.getBoundingClientRect();
+      var p = map.L.pos[num];
+      if (p) applyView(map, map.k, r.width / 2 - (p.left + p.w / 2) * map.k, r.height / 2 - (p.top + p.h / 2) * map.k);
+    }
+  }
+
+  // ── transcript replay ────────────────────────────────────────────────────
+  function cpLines(script) {
+    return script ? script.querySelectorAll('.cp-line') : [];
+  }
+
+  function cancelReplay() {
+    if (!cockpit) return;
+    for (var i = 0; i < cockpit.timers.length; i++) clearTimeout(cockpit.timers[i]);
+    cockpit.timers = [];
+  }
+
+  function isHalted() {
+    return !!(cockpit && cockpit.script && cockpit.script.querySelector('.cp-line.is-waiting'));
+  }
+
+  // Scrolling away cancels pending timers so lines do not reveal off-screen.
+  // It must NOT walk past a parked confirm: revealing the rest would show a
+  // completed confirmation nobody gave, which is the one claim this widget
+  // exists to make. A halted script has no pending timer anyway, so leaving it
+  // frozen costs nothing and is still there to confirm when you scroll back.
+  function leaveScript(root) {
+    if (isHalted()) return cancelReplay();
+    finishScript(root);
+  }
+
+  // Drop the replay wrapper so every line is visible again, and clear any
+  // parked halt. Used on cancel and when a new replay starts.
+  function finishScript(root) {
+    cancelReplay();
+    var scripts = root.querySelectorAll('.cp-script');
+    for (var i = 0; i < scripts.length; i++) {
+      scripts[i].classList.remove('is-replaying');
+      var lines = cpLines(scripts[i]);
+      for (var j = 0; j < lines.length; j++) {
+        lines[j].classList.remove('is-shown');
+        lines[j].classList.remove('is-waiting');
+      }
+    }
+    if (cockpit) { cockpit.script = null; cockpit.idx = 0; }
+  }
+
+  function runScript(root, name) {
+    if (!cockpit || !name) return;
+    finishScript(root);
+
+    var scripts = root.querySelectorAll('.cp-script');
+    var target = null;
+    for (var i = 0; i < scripts.length; i++) {
+      var isTarget = scripts[i].getAttribute('data-script') === name;
+      scripts[i].hidden = !isTarget;
+      if (isTarget) target = scripts[i];
+    }
+    if (!target) return;
+
+    var input = root.querySelector('.cp-input-val');
+    if (input) input.textContent = '';
+
+    // Reduced motion removes the stagger, NOT the confirm halt: the halt is
+    // interaction, not animation, and it is the whole point of the widget.
+    // Lines pop in with no transition and the sequence still stops for a human.
+    target.classList.add('is-replaying');
+    cockpit.script = target;
+    cockpit.idx = 0;
+    stepScript(root);
+  }
+
+  function stepScript(root) {
+    if (!cockpit || !cockpit.script) return;
+    var lines = cpLines(cockpit.script);
+
+    if (cockpit.idx >= lines.length) {
+      cockpit.script.classList.remove('is-replaying');
+      cockpit.script = null;
+      cockpit.timers = [];       // all fired; drop the spent ids
+      return;
+    }
+
+    var line = lines[cockpit.idx];
+    line.classList.add('is-shown');
+    cockpit.idx++;
+
+    // The halt. Nothing below this line runs until someone clicks confirm.
+    if (line.getAttribute('data-halt')) {
+      line.classList.add('is-waiting');
+      return;
+    }
+
+    cockpit.timers.push(setTimeout(function () { stepScript(root); }, cockpit.reduced ? 0 : CP_STEP_MS));
+  }
+
+  function resumeScript(root) {
+    if (!cockpit || !cockpit.script) return;
+    var waiting = cockpit.script.querySelector('.cp-line.is-waiting');
+    if (waiting) waiting.classList.remove('is-waiting');
+    stepScript(root);
   }
 
   // ═════════════════════════════════════════════════════════════════════════

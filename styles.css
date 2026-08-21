@@ -3321,3 +3321,625 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 
 /* ── end AI tile art ── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COCKPIT WIDGET (.cp) — §5 Mission Control
+   A hand-built recreation of mbschenked/cockpit (Electron desktop app).
+   Deliberately uses COCKPIT'S OWN palette, not this page's green accent:
+   a recreation that recolours is a weaker claim, and a real screen capture
+   has to be able to drop in later without clashing. Treat it as a device
+   screen embedded in the page. All hex values below are lifted verbatim
+   from that repo's renderer/styles.css.
+   Markup lives in projects/ai.js; behaviour in app.js wireCockpit().
+   ═════════════════════════════════════════════════════════════════════════ */
+
+.cp {
+  --cp-bg: #0b0e14;          /* app + terminal background */
+  --cp-pane: #11151f;        /* pane surface */
+  --cp-head: #171c29;        /* pane header, row hover */
+  --cp-line: #232a3b;        /* every 1px rule in the app */
+  --cp-text: #c8cede;
+  /* The app's real meta colour is #5d6579, and it passes there at 13px
+     Consolas. This recreation renders the same text ~3px smaller, where
+     #5d6579 falls to 2.9-3.3:1 on these three surfaces — under AA. Text
+     therefore uses a lightened value; the authentic one is kept for the
+     decorative rules that carry no meaning. */
+  --cp-dim: #7d859b;
+  --cp-dim-deco: #5d6579;
+  --cp-accent: #6ea8fe;      /* focus / selection blue */
+  --cp-gold: #ffc94d;        /* "ready", selected task, frontier */
+  --cp-red: #e06c75;
+  --cp-computing: #4ec9b0;
+  --cp-idle: #8a7a45;
+  --cp-shell: #525b6b;
+
+  background: var(--cp-bg);
+  border: 1px solid var(--cp-line);
+  border-radius: var(--radius);
+  margin: 1.6rem 0 0.6rem;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  color: var(--cp-text);
+}
+
+/* ── title bar ─────────────────────────────────────────────────────────── */
+.cp-bar {
+  display: flex; align-items: baseline; gap: 0.7rem;
+  padding: 0.5rem 0.85rem;
+  background: var(--cp-head);
+  border-bottom: 1px solid var(--cp-line);
+}
+.cp-bar-title {
+  font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase;
+  font-weight: 600; color: var(--cp-text);
+}
+.cp-bar-sub { font-size: 0.62rem; color: var(--cp-dim); letter-spacing: 0.04em; }
+
+/* ── tab strip ─────────────────────────────────────────────────────────── */
+/* Browser-style tabs with the bottom edge removed, as in the real app. */
+.cp-tabs {
+  display: flex; gap: 2px; align-items: flex-end;
+  padding: 0.4rem 0.5rem 0;
+  background: var(--cp-bg);
+  border-bottom: 1px solid var(--cp-line);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.cp-tabs::-webkit-scrollbar { display: none; }
+
+.cp-tab {
+  display: inline-flex; align-items: center; gap: 6px;
+  flex: 0 0 auto;
+  padding: 4px 9px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  line-height: 1.5;
+  color: var(--cp-dim);
+  background: var(--cp-bg);
+  border: 1px solid var(--cp-line);
+  border-bottom: none;
+  border-radius: 5px 5px 0 0;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.cp-tab:hover { color: var(--cp-text); }
+.cp-tab.is-active { color: var(--cp-text); border-color: var(--cp-accent); }
+.cp-tab-proj { color: var(--cp-accent); font-size: 0.62rem; }
+.cp-tab--plus {
+  border-style: dashed; opacity: 0.4; padding: 4px 10px;
+  color: var(--cp-dim); cursor: default;
+}
+
+/* activity dots — the app's four live states */
+.cp-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; background: var(--cp-shell); }
+.cp-tab[data-state="shell"] { opacity: 0.55; }
+.cp-tab[data-state="computing"] .cp-dot { background: var(--cp-computing); animation: cpDot 0.9s ease-in-out infinite; }
+.cp-tab[data-state="computing"] { border-color: var(--cp-computing); }
+.cp-tab[data-state="ready"] .cp-dot { background: var(--cp-gold); box-shadow: 0 0 6px 1px rgba(255,201,77,0.8); }
+.cp-tab[data-state="ready"] { color: var(--cp-text); border-color: var(--cp-gold); animation: cpReady 1.6s ease-in-out infinite; }
+.cp-tab[data-state="idle"] .cp-dot { background: var(--cp-idle); }
+
+@keyframes cpDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@keyframes cpReady {
+  0%, 100% { box-shadow: 0 0 3px 0 rgba(255,201,77,0.25); }
+  50%      { box-shadow: 0 0 9px 1px rgba(255,201,77,0.65); }
+}
+
+/* ── layout ────────────────────────────────────────────────────────────── */
+/* The real app pins the sidebar to a fixed 280px and lets the terminal take
+   the rest — so the panes stay narrow as the window grows. A percentage split
+   makes the sidebar balloon and reads nothing like the app. */
+/* Three panes, as the app ships: sidebar 280px, star map 420px, terminal takes
+   the rest. The widget only has ~922px to spend against the app's full window,
+   so both fixed panes are scaled down rather than dropping one. */
+.cp-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) minmax(0, 18.5rem);
+  align-items: stretch;
+}
+.cp-side { display: flex; flex-direction: column; min-width: 0; border-right: 1px solid var(--cp-line); }
+.cp-pane { background: var(--cp-pane); min-width: 0; display: flex; flex-direction: column; }
+.cp-pane--projects { border-bottom: 1px solid var(--cp-line); }
+.cp-pane--tasks { flex: 1; }
+
+.cp-pane-head {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--cp-head);
+  border-bottom: 1px solid var(--cp-line);
+  font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--cp-dim);
+}
+
+.cp-rows { list-style: none; margin: 0; padding: 0; }
+
+/* ── projects pane ─────────────────────────────────────────────────────── */
+.cp-proj {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 5px 12px;
+  font-size: 0.7rem;
+  border-left: 2px solid transparent;
+  color: var(--cp-text);
+}
+.cp-proj.is-selected { background: var(--cp-head); border-left-color: var(--cp-accent); }
+.cp-grip { color: var(--cp-dim-deco); font-size: 0.6rem; opacity: 0.6; flex: none; }
+.cp-proj-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── ticket type glyphs — clip-path shapes, as in the app ──────────────── */
+.cp-type { display: inline-block; width: 10px; height: 10px; flex: none; }
+.cp-type--research  { background: #4ea8de; clip-path: circle(50%); }
+.cp-type--task      { background: #6fbf83; }
+.cp-type--prototype { background: #9b72cf; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.cp-type--grilling  { background: #e0a83c; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+
+/* At the app's real 280px sidebar the four legend items cannot share a row
+   with the TASKS label, so give the legend its own row rather than let it
+   wrap raggedly around a vertically-centred heading. */
+.cp-pane--tasks .cp-pane-head { flex-wrap: wrap; row-gap: 0.4rem; }
+.cp-legend { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.cp-legend-item {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.55rem; letter-spacing: 0.04em; text-transform: none;
+  color: var(--cp-dim);
+}
+.cp-legend-item .cp-type { width: 8px; height: 8px; }
+
+/* ── tasks pane ────────────────────────────────────────────────────────── */
+.cp-task {
+  display: block; width: 100%; text-align: left;
+  padding: 6px 12px;
+  background: none; border: none;
+  border-bottom: 1px solid var(--cp-line);
+  border-left: 2px solid transparent;
+  font-family: var(--font-mono);
+  color: var(--cp-text);
+  cursor: pointer;
+}
+.cp-task:hover { background: var(--cp-head); }
+.cp-task.is-selected { background: var(--cp-head); border-left-color: var(--cp-gold); }
+.cp-task-head { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.cp-task-title {
+  flex: 1; min-width: 0;
+  font-size: 0.68rem; line-height: 1.4;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cp-task-id { font-size: 0.6rem; color: var(--cp-dim); flex: none; }
+
+.cp-note {
+  margin: 0; padding: 7px 12px;
+  font-size: 0.6rem; font-style: italic;
+  color: var(--cp-gold);
+  border-top: 1px solid var(--cp-line);
+}
+
+/* ── terminal pane ─────────────────────────────────────────────────────── */
+.cp-term { background: var(--cp-pane); }
+.cp-session {
+  font-size: 0.58rem; letter-spacing: 0.04em; text-transform: none;
+  color: var(--cp-accent);
+}
+.cp-term-ctl { margin-left: auto; display: flex; gap: 4px; }
+.cp-btn {
+  padding: 1px 8px;
+  font-family: var(--font-mono);
+  font-size: 0.58rem; letter-spacing: 0.1em;
+  color: var(--cp-dim);
+  background: none;
+  border: 1px solid var(--cp-line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.cp-btn:hover { color: var(--cp-accent); border-color: var(--cp-accent); }
+.cp-btn[aria-pressed="true"] { color: var(--cp-accent); border-color: var(--cp-accent); }
+
+.cp-term-row { display: flex; align-items: stretch; min-height: 0; }
+
+.cp-term-body {
+  flex: 1; min-width: 0;
+  min-height: 15.5rem;              /* locked so line-reveal cannot shift the page */
+  padding: 0.7rem 0.9rem;
+  background: var(--cp-bg);
+  font-size: 0.7rem;
+  line-height: 1.85;
+  overflow-x: auto;
+}
+
+.cp-line { display: flex; align-items: baseline; gap: 0.5rem; min-width: 0; }
+.cp-line--sys  { color: var(--cp-dim); font-style: italic; }
+.cp-line--done { color: var(--cp-text); font-weight: 600; }
+/* Capped so the dotted leader stays a short run between label and value
+   instead of stretching the full pane width at desktop sizes. */
+.cp-line--step { padding-left: 1.2rem; max-width: 30rem; }
+.cp-sigil { color: var(--cp-computing); font-weight: 600; flex: none; }
+.cp-sigil--ask { color: var(--cp-gold); }
+.cp-cmd-text { color: var(--cp-text); font-weight: 600; }
+.cp-arrow { color: var(--cp-accent); flex: none; }
+.cp-k { color: var(--cp-text); flex: none; }
+/* The leader is decoration and the value is content, so the leader collapses
+   first when the pad opens and squeezes the terminal. */
+.cp-lead {
+  flex: 1 1 1.5rem; min-width: 0;
+  align-self: center;
+  border-bottom: 1px dotted var(--cp-dim-deco);
+  opacity: 0.5;
+}
+.cp-v { color: var(--cp-dim); flex: 0 1 auto; min-width: 0; }
+
+/* the confirm halt — the sequence physically stops here until a human clicks */
+.cp-line--halt { color: var(--cp-gold); }
+.cp-confirm {
+  margin-left: 0.4rem;
+  padding: 0 9px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem; letter-spacing: 0.08em;
+  color: var(--cp-bg); background: var(--cp-gold);
+  border: none; border-radius: 3px;
+  cursor: pointer;
+}
+.cp-confirm:hover { background: #ffd977; }
+.cp-line--halt:not(.is-waiting) .cp-confirm { display: none; }
+
+/* the pad's paste target — a live input line, never auto-submitted */
+/* Inline flow, not flex: a long pasted path wraps across lines and the caret
+   has to sit after the last character, not float to the end of the first row. */
+.cp-input { margin-top: 0.6rem; word-break: break-all; }
+.cp-ps { color: var(--cp-computing); margin-right: 0.45rem; }
+.cp-input-val { color: var(--cp-text); }
+.cp-caret {
+  display: inline-block; vertical-align: text-bottom;
+  width: 0.5rem; height: 0.95rem;
+  background: var(--cp-accent);
+  animation: cpCaret 1.05s step-end infinite;
+}
+@keyframes cpCaret { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+
+/* ── drawing pad ───────────────────────────────────────────────────────── */
+.cp-pad {
+  flex: 0 1 15rem; min-width: 11rem;
+  display: flex; flex-direction: column;
+  background: var(--cp-pane);
+  border-left: 1px solid var(--cp-line);
+}
+/* A class with a display value outranks the UA [hidden] rule, so the closed
+   pad would otherwise stay on screen. Same for any other display-carrying
+   element in this widget that toggles via the hidden attribute. */
+.cp [hidden] { display: none !important; }
+.cp-pad-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  padding: 5px 7px;
+  border-bottom: 1px solid var(--cp-line);
+}
+.cp-pad-target {
+  font-size: 0.56rem; color: var(--cp-dim);
+  max-width: 8.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cp-pad-tools { margin-left: auto; display: flex; gap: 3px; }
+.cp-sw, .cp-tool {
+  width: 15px; height: 15px; flex: none;
+  border: 1px solid var(--cp-line); border-radius: 3px;
+  font-size: 0.5rem; line-height: 13px; text-align: center;
+  color: var(--cp-dim);
+}
+.cp-sw, .cp-tool { cursor: pointer; background: none; }
+.cp-sw.is-on, .cp-tool.is-on { border-color: var(--cp-accent); box-shadow: 0 0 0 1px var(--cp-accent); }
+.cp-sw:hover, .cp-tool:hover { border-color: var(--cp-text); }
+
+.cp-pad-canvas { flex: 1; display: flex; padding: 7px; min-height: 0; }
+.cp-pad-cv {
+  width: 100%; height: auto; align-self: center;
+  background: #fff;
+  border: 1px solid var(--cp-line);
+  /* The OS pan/pinch gesture would otherwise fight the pointer handlers on
+     precision touchpads — same guard the real pad carries. */
+  touch-action: none;
+  cursor: crosshair;
+}
+.cp-pad-cv.is-eraser { cursor: cell; }
+.cp-pad-foot {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 7px;
+  border-top: 1px solid var(--cp-line);
+}
+/* A dead pairing flashes the label red in the real pad; here it is what a
+   blank canvas gets, since neither has anything to send. */
+.cp-pad-target.is-flash { color: var(--cp-red); }
+.cp-pad-gallery { display: flex; gap: 5px; }
+.cp-thumb { width: 26px; height: 15px; background: #fff; border-radius: 3px; opacity: 0.8; }
+.cp-pad-send {
+  margin-left: auto;
+  padding: 2px 9px;
+  font-family: var(--font-mono);
+  font-size: 0.58rem; letter-spacing: 0.08em;
+  color: var(--cp-text);
+  background: none;
+  border: 1px solid var(--cp-accent); border-radius: 3px;
+  cursor: pointer;
+}
+.cp-pad-send:hover { background: rgba(110,168,254,0.14); }
+.cp-pad.is-selected { box-shadow: inset 0 0 0 1px rgba(110,168,254,0.45); }
+
+/* ── controls + footer ─────────────────────────────────────────────────── */
+.cp-cmds {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  background: var(--cp-pane);
+  border-top: 1px solid var(--cp-line);
+}
+.cp-cmd {
+  padding: 3px 11px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem; letter-spacing: 0.06em;
+  color: var(--cp-text);
+  background: none;
+  border: 1px solid var(--cp-line); border-radius: 3px;
+  cursor: pointer;
+}
+.cp-cmd:hover { border-color: var(--cp-accent); color: var(--cp-accent); }
+.cp-cmd--primary { border-color: var(--cp-gold); color: var(--cp-gold); }
+.cp-cmd--primary:hover { border-color: var(--cp-gold); color: var(--cp-bg); background: var(--cp-gold); }
+.cp-hint { font-size: 0.58rem; color: var(--cp-dim); font-style: italic; }
+
+.cp-sys {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.58rem; color: var(--cp-dim);
+  background: var(--cp-bg);
+  border-top: 1px solid var(--cp-line);
+}
+
+.cp-cap {
+  margin: 0;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.58rem; letter-spacing: 0.08em;
+  color: var(--cp-dim);
+  background: var(--cp-head);
+  border-top: 1px solid var(--cp-line);
+}
+
+/* focus ring — mirrors the site's existing accent focus treatment */
+.cp button:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 2px; }
+
+/* ── replay reveal ─────────────────────────────────────────────────────── */
+/* Lines are pre-rendered in the DOM and hidden only while a replay is
+   running, so the transcript is complete with JS off or mid-flight. */
+.cp-script.is-replaying .cp-line { opacity: 0; }
+.cp-script.is-replaying .cp-line.is-shown { opacity: 1; transition: opacity 0.18s ease; }
+
+/* ── star map: the "Data Shards" tree ──────────────────────────────────── */
+/* Tokens lifted from the app's #starmap-view. --sh-w/--sh-h must stay in
+   lockstep with NODE_W/NODE_H in app.js or the lane endpoints drift off the
+   cards — the same coupling the real renderer warns about. */
+.cp-map {
+  --sh-w: 140px; --sh-h: 84px; --sh-cut: 11px;
+  --sh-surface: #111420; --sh-surface-2: #0c0e16;
+  --sh-muted: #535870; --sh-bright: #d4d8e8;
+  --gold: #ffc94d; --amber: #e89a4b; --ember: #c7d8ee;
+  --red: #b05252; --husk: #6b7280; --fogc: #9a7fd4;
+  --lane-idle: rgba(173, 177, 196, 0.18);
+  --lane-on: #6ea8fe; --lane-glow: rgba(110, 168, 254, 0.45);
+  border-left: 1px solid var(--cp-line);
+  min-width: 0;
+}
+.cp-map .cp-pane-head { justify-content: space-between; }
+.cp-map-fit { font-size: 0.5rem; letter-spacing: 0.12em; }
+
+.cp-hud {
+  padding: 6px 9px;
+  background: #06090f;
+  border-bottom: 1px solid var(--cp-line);
+  font-size: 0.58rem;
+}
+/* The destination is a wrapped paragraph by nature — the app clamps it to
+   3.9em rather than shortening the text, so the HUD can't push the map down. */
+.cp-hud-dest { color: var(--cp-text); line-height: 1.35; max-height: 3.9em; overflow: hidden; }
+.cp-hud-counts {
+  margin-top: 3px; display: flex; align-items: center; gap: 6px;
+  font-size: 0.55rem; color: var(--cp-dim);
+}
+.cp-hud-counts b { color: var(--cp-text); }
+.cp-hud-bar {
+  width: 70px; height: 3px; background: var(--cp-line);
+  border-radius: 2px; overflow: hidden; display: inline-block;
+}
+.cp-hud-bar i { display: block; height: 100%; background: var(--gold); }
+
+.cp-map-body { position: relative; flex: 1; min-height: 17rem; background: #06090f; overflow: hidden; }
+.cp-map-ph {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  margin: 0; padding: 0 1.2rem; text-align: center;
+  font-size: 0.6rem; color: var(--cp-dim);
+}
+.cp-viewport { position: absolute; inset: 0; overflow: hidden; cursor: grab; }
+.cp-viewport.is-grabbing { cursor: grabbing; }
+.cp-stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.cp-lanes { position: absolute; left: 0; top: 0; overflow: visible; z-index: 1; }
+
+/* LEVEL bands — the depth cue that replaced the radial's orbits. */
+.cp-band { position: absolute; left: 0; border-top: 1px dashed rgba(154, 180, 212, 0.14); }
+.cp-band-label {
+  position: absolute; left: 8px; top: -9px;
+  font-size: 0.5rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--sh-muted); background: #06090f; padding-right: 7px;
+}
+.cp-band-label b { color: #4ea8de; }
+.cp-fogrim {
+  position: absolute; left: 8px;
+  font-size: 0.46rem; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--fogc); opacity: 0.7;
+}
+
+/* The shard: a chamfered card with corner brackets. No border-radius anywhere
+   in the map — the chamfer IS the map's visual identity against the app's
+   3-5px radii elsewhere. */
+.cp-shard {
+  position: absolute; z-index: 2;
+  width: var(--sh-w); min-height: var(--sh-h);
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 8px 10px;
+  text-align: left;
+  background: linear-gradient(150deg, var(--sh-surface), var(--sh-surface-2) 70%);
+  border: 1px solid var(--sh-muted);
+  color: var(--sh-bright);
+  font-family: var(--font-mono);
+  cursor: pointer;
+  clip-path: polygon(var(--sh-cut) 0, 100% 0, 100% calc(100% - var(--sh-cut)), calc(100% - var(--sh-cut)) 100%, 0 100%, 0 var(--sh-cut));
+}
+.cp-shard::before, .cp-shard::after {
+  content: ""; position: absolute; width: 9px; height: 9px;
+  border-color: var(--sh-accent, var(--sh-muted));
+}
+.cp-shard::before { top: -3px; left: -3px; border-top: 2px solid; border-left: 2px solid; }
+.cp-shard::after { bottom: -3px; right: -3px; border-bottom: 2px solid; border-right: 2px solid; }
+.cp-shard.is-selected::before, .cp-shard.is-selected::after { border-width: 4px; }
+
+.cp-sh-row1 { display: flex; align-items: baseline; justify-content: space-between; gap: 5px; }
+.cp-sh-num { font-size: 0.5rem; letter-spacing: 0.1em; color: var(--sh-muted); }
+.cp-sh-status {
+  font-size: 0.45rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--sh-accent, var(--sh-muted));
+}
+.cp-sh-title { font-size: 0.62rem; font-weight: 600; line-height: 1.16; color: var(--sh-bright); }
+.cp-sh-foot { margin-top: auto; display: flex; align-items: center; justify-content: flex-end; }
+.cp-sh-glyph {
+  font-size: 0.45rem; padding: 0 3px;
+  color: var(--ty-accent, var(--sh-muted));
+  border: 1px solid var(--ty-accent, var(--sh-muted));
+}
+.cp-sh-stripe {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: linear-gradient(135deg, var(--ty-accent, var(--sh-muted)), transparent 75%);
+}
+.cp-shard--ty-research  { --ty-accent: #4ea8de; }
+.cp-shard--ty-prototype { --ty-accent: #9b72cf; }
+.cp-shard--ty-grilling  { --ty-accent: #e0a83c; }
+.cp-shard--ty-task      { --ty-accent: #6fbf83; }
+
+/* Status ring. Frontier — open, unclaimed, unblocked — is the map's payload,
+   so it is the only one that grows and pulses. */
+.cp-shard--frontier {
+  --sh-accent: var(--gold); border-color: var(--gold);
+  box-shadow: 0 0 12px 1px rgba(255, 201, 77, 0.3);
+  animation: cpShardPulse 2.6s ease-in-out infinite;
+  width: calc(var(--sh-w) + 14px); min-height: calc(var(--sh-h) + 10px);
+}
+.cp-shard--claimed  { --sh-accent: var(--amber); border-color: var(--amber); box-shadow: 0 0 9px 1px rgba(232, 154, 75, 0.35); }
+.cp-shard--resolved { --sh-accent: var(--ember); border-color: var(--ember); box-shadow: 0 0 9px 1px rgba(140, 170, 210, 0.35); }
+.cp-shard--blocked  { --sh-accent: var(--red); border-color: var(--red); box-shadow: 0 0 8px 1px rgba(176, 82, 82, 0.3); opacity: 0.88; }
+.cp-shard--husk     { --sh-accent: var(--husk); border-color: var(--husk); opacity: 0.5; filter: saturate(0.35); }
+@keyframes cpShardPulse {
+  0%, 100% { box-shadow: 0 0 12px 1px rgba(255, 201, 77, 0.3); }
+  50%      { box-shadow: 0 0 18px 3px rgba(255, 201, 77, 0.45); }
+}
+.cp-shard:hover { border-color: #edf0f8; box-shadow: 0 0 14px 2px rgba(237, 240, 248, 0.28); }
+.cp-shard.is-selected { border-color: #edf0f8; box-shadow: 0 0 20px 3px rgba(237, 240, 248, 0.35); }
+
+/* ghost shard = a fog patch — faded, never hidden */
+.cp-ghost {
+  position: absolute; z-index: 2;
+  width: 118px; min-height: 52px;
+  display: flex; flex-direction: column; justify-content: center; gap: 3px;
+  padding: 7px 9px;
+  background: rgba(154, 127, 212, 0.05);
+  border: 1px dashed var(--fogc);
+  color: var(--fogc);
+  font-family: var(--font-mono);
+  text-align: center; cursor: pointer;
+  clip-path: polygon(var(--sh-cut) 0, 100% 0, 100% calc(100% - var(--sh-cut)), calc(100% - var(--sh-cut)) 100%, 0 100%, 0 var(--sh-cut));
+  opacity: 0.72; transition: opacity 0.25s;
+}
+.cp-ghost:hover { opacity: 1; }
+.cp-ghost .cp-sh-num { color: var(--fogc); opacity: 0.8; letter-spacing: 0.18em; }
+.cp-ghost .cp-sh-title { font-size: 0.52rem; color: var(--fogc); font-weight: 400; }
+
+/* hyperlanes — chamfered orthogonal routes, dashed like the app's */
+.cp-lane { fill: none; stroke: var(--lane-idle); stroke-width: 1; stroke-dasharray: 4 4; transition: stroke 0.25s, stroke-width 0.25s; }
+/* A cleared dependency is lit and flowing — the map's most recognisable
+   motion, and the only thing that distinguishes route-already-walked from
+   route-still-barred at a glance. */
+.cp-lane--satisfied {
+  stroke: var(--lane-on); stroke-width: 2; stroke-dasharray: 6 10;
+  filter: drop-shadow(0 0 3px var(--lane-glow));
+  animation: cpLaneFlow 1.4s linear infinite;
+}
+.cp-lane--blocking {
+  stroke: var(--red); stroke-width: 2; stroke-dasharray: 5 7;
+  filter: drop-shadow(0 0 4px rgba(176, 82, 82, 0.3));
+  animation: cpLaneWarn 1.9s linear infinite;
+}
+.cp-lane.is-hot { stroke: #ff6b6b; stroke-width: 2.6; stroke-dasharray: none; }
+.cp-lane--satisfied.is-hot { stroke: #edf0f8; }
+@keyframes cpLaneFlow { to { stroke-dashoffset: -32; } }
+@keyframes cpLaneWarn { to { stroke-dashoffset: -24; } }
+
+/* The stage pans under this, so the legend needs its own backdrop or shards
+   slide behind it and both become unreadable. */
+.cp-map-legend {
+  position: absolute; left: 6px; bottom: 5px; z-index: 3;
+  /* Two columns: the app stacks all eight rows vertically, which in a pane
+     this short would bury the map behind its own key. */
+  display: grid; grid-template-columns: repeat(2, auto); gap: 2px 9px;
+  padding: 4px 6px;
+  background: rgba(6, 9, 15, 0.88);
+  border: 1px solid var(--cp-line);
+  font-family: var(--font-mono); font-size: 0.45rem; color: var(--cp-dim);
+  pointer-events: none;
+}
+.cp-map-legend span { display: flex; align-items: center; gap: 5px; }
+.cp-map-legend i { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+/* Lane rows are rules, not dots — they have to read as the edge they explain. */
+.cp-map-legend i.cp-lg-block,
+.cp-map-legend i.cp-lg-done { width: 10px; height: 0; border-radius: 0; background: none; }
+.cp-map-legend i.cp-lg-block { border-top: 2px dashed var(--red); }
+.cp-map-legend i.cp-lg-done { border-top: 2px dashed var(--lane-on); }
+
+/* ── narrow viewports ──────────────────────────────────────────────────── */
+/* The pinch point is ~1000px, not mobile: the sidebar holds 28% until 900px. */
+@media (max-width: 1180px) {
+  .cp-term-body { font-size: 0.64rem; }
+  .cp-task-title, .cp-proj { font-size: 0.64rem; }
+  .cp-legend { gap: 0.4rem; }
+}
+@media (max-width: 1040px) {
+  .cp-legend-item { font-size: 0.5rem; }
+  /* Three fixed-ish panes stop fitting here: the map drops under the other
+     two and spans both, which keeps the shards readable instead of shaving
+     the terminal to nothing. */
+  .cp-grid { grid-template-columns: minmax(0, 13rem) minmax(0, 1fr); }
+  .cp-map { grid-column: 1 / -1; border-left: none; border-top: 1px solid var(--cp-line); }
+  .cp-pad { flex-basis: 11rem; min-width: 9rem; }
+}
+@media (max-width: 820px) {
+  /* Terminal first — it carries the argument; the panes are supporting. */
+  .cp-grid { grid-template-columns: minmax(0, 1fr); }
+  .cp-term { order: 1; border-bottom: 1px solid var(--cp-line); }
+  .cp-side { order: 2; border-right: none; }
+  .cp-map { order: 3; }
+  .cp-term-body { min-height: 14rem; }
+}
+@media (max-width: 560px) {
+  .cp-term-body { font-size: 0.58rem; padding: 0.6rem 0.7rem; }
+  .cp-legend { display: none; }
+  .cp-pad { flex-basis: 9rem; min-width: 8rem; }
+  .cp-cmd { flex: 1 1 100%; text-align: center; }
+  .cp-hint { display: none; }
+  .cp-map-legend { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-dot, .cp-tab, .cp-caret, .cp-shard--frontier,
+  .cp-lane--satisfied, .cp-lane--blocking { animation: none !important; }
+  .cp-stage { transition: none !important; }
+  /* Kill the fade, keep the reveal. Forcing opacity to 1 here would also
+     defeat the confirm halt, which must survive — it is interaction, not
+     motion. Lines just appear instantly instead of staggering in. */
+  .cp-script.is-replaying .cp-line.is-shown { transition: none !important; }
+}
+
+/* Scoped green override — .bt-label is amber-hardcoded globally and this page
+   runs the green accent. Never edit the base rule; TOG/TBH could revive it. */
+[data-accent="green"] .bt-label { color: var(--green); }
+
+/* Full-bleed prose block: escapes .section-prose's 70ch clamp. */
+.section-widget { max-width: 100%; }
+
+/* ── end Cockpit widget ── */

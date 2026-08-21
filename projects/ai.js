@@ -284,6 +284,170 @@ window.PROJECTS.ai = {
               '<text x="896" y="336" class="text-xs">through the terminal</text>' +
             '</svg>' +
           '</div>' },
+        // ── Cockpit widget ──────────────────────────────────────────────
+        // Hand-built recreation of the real app (mbschenked/cockpit @ de28ff6).
+        // Every colour, glyph and state below is taken from that repo's own CSS
+        // — Cockpit's palette, not this page's green, because a recreation that
+        // recolours is a weaker claim and a real capture has to slot in later.
+        // Ticket + project names are live Linear data; nothing here is invented.
+        // Uses type 'widget' so it escapes .section-prose's 70ch clamp.
+        // Behaviour is wired by wireCockpit() in app.js.
+        { type: 'widget', html:
+          '<div class="cp" role="figure" aria-label="Cockpit — interactive recreation" aria-describedby="cp-cap">' +
+
+            '<div class="cp-bar">' +
+              '<span class="cp-bar-title">Cockpit</span>' +
+              '<span class="cp-bar-sub">wayfinder harness &middot; electron + xterm.js + node-pty</span>' +
+            '</div>' +
+
+            // Global tab strip — one tab per live PTY across all projects.
+            // The four dot states are the app's real activity vocabulary.
+            '<div class="cp-tabs" role="group" aria-label="Terminal sessions">' +
+              '<button type="button" class="cp-tab is-active" data-state="computing" data-label="Default: claude-1" aria-pressed="true" title="computing — claude output is flowing"><span class="cp-dot"></span><span class="cp-tab-proj">Default:</span>claude-1</button>' +
+              '<button type="button" class="cp-tab" data-state="ready" data-label="UnrealBossMaker: claude-2" aria-pressed="false" title="ready — it stopped, and you have not looked yet"><span class="cp-dot"></span><span class="cp-tab-proj">UnrealBossMaker:</span>claude-2</button>' +
+              '<button type="button" class="cp-tab" data-state="idle" data-label="VFX: claude-3" aria-pressed="false" title="idle — a claude session, quiet, acknowledged"><span class="cp-dot"></span><span class="cp-tab-proj">VFX:</span>claude-3</button>' +
+              '<button type="button" class="cp-tab" data-state="shell" data-label="Counter: pwsh-4" aria-pressed="false" title="shell — claude was never launched here"><span class="cp-dot"></span><span class="cp-tab-proj">Counter:</span>pwsh-4</button>' +
+              '<span class="cp-tab cp-tab--plus" aria-hidden="true">+</span>' +
+            '</div>' +
+
+            '<div class="cp-grid">' +
+
+              '<div class="cp-side">' +
+                '<section class="cp-pane cp-pane--projects">' +
+                  '<header class="cp-pane-head">Projects</header>' +
+                  '<ul class="cp-rows">' +
+                    '<li class="cp-proj is-selected"><span class="cp-grip" aria-hidden="true">&#10495;</span><span class="cp-proj-name">WorkBench Overhaul</span></li>' +
+                    '<li class="cp-proj"><span class="cp-grip" aria-hidden="true">&#10495;</span><span class="cp-proj-name">UnrealBossMaker</span></li>' +
+                    '<li class="cp-proj"><span class="cp-grip" aria-hidden="true">&#10495;</span><span class="cp-proj-name">Boss AI Phase B</span></li>' +
+                    '<li class="cp-proj"><span class="cp-grip" aria-hidden="true">&#10495;</span><span class="cp-proj-name">Counter Completion Arc</span></li>' +
+                    '<li class="cp-proj"><span class="cp-grip" aria-hidden="true">&#10495;</span><span class="cp-proj-name">VFX Style Kit</span></li>' +
+                    '<li class="cp-proj"><span class="cp-grip" aria-hidden="true">&#10495;</span><span class="cp-proj-name">AnimAuthor</span></li>' +
+                  '</ul>' +
+                '</section>' +
+
+                '<section class="cp-pane cp-pane--tasks">' +
+                  '<header class="cp-pane-head">Tasks' +
+                    '<span class="cp-legend">' +
+                      '<span class="cp-legend-item"><i aria-hidden="true" class="cp-type cp-type--research"></i>research</span>' +
+                      '<span class="cp-legend-item"><i aria-hidden="true" class="cp-type cp-type--prototype"></i>prototype</span>' +
+                      '<span class="cp-legend-item"><i aria-hidden="true" class="cp-type cp-type--grilling"></i>grilling</span>' +
+                      '<span class="cp-legend-item"><i aria-hidden="true" class="cp-type cp-type--task"></i>task</span>' +
+                    '</span>' +
+                  '</header>' +
+                  '<ul class="cp-rows">' +
+                    '<li><button type="button" class="cp-task"><span class="cp-task-head"><i aria-hidden="true" class="cp-type cp-type--research"></i><span class="cp-task-title">Cockpit-node-pty Electron matrix verify-1</span> <span class="cp-task-id">TOG-102</span></span></button></li>' +
+                    '<li><button type="button" class="cp-task"><span class="cp-task-head"><i aria-hidden="true" class="cp-type cp-type--task"></i><span class="cp-task-title">Cockpit-star map panel-5</span> <span class="cp-task-id">TOG-106</span></span></button></li>' +
+                    '<li><button type="button" class="cp-task"><span class="cp-task-head"><i aria-hidden="true" class="cp-type cp-type--prototype"></i><span class="cp-task-title">Cockpit-v1 assembly-8</span> <span class="cp-task-id">TOG-109</span></span></button></li>' +
+                    '<li><button type="button" class="cp-task"><span class="cp-task-head"><i aria-hidden="true" class="cp-type cp-type--task"></i><span class="cp-task-title">Cockpit-subagent delegation signal-11</span> <span class="cp-task-id">TOG-115</span></span></button></li>' +
+                  '</ul>' +
+                  '<p class="cp-note" hidden>display only &mdash; cockpit has no write path to Linear</p>' +
+                '</section>' +
+              '</div>' +
+
+              '<section class="cp-pane cp-term">' +
+                '<header class="cp-pane-head">Terminal' +
+                  '<span class="cp-session" data-role="session-label">Default: claude-1</span>' +
+                  '<span class="cp-term-ctl">' +
+                    '<button type="button" class="cp-btn cp-btn--pad" aria-pressed="false">&#9998; pad</button>' +
+                  '</span>' +
+                '</header>' +
+
+                '<div class="cp-term-row">' +
+                  '<div class="cp-term-body">' +
+
+                    '<div class="cp-script" data-script="boot">' +
+                      '<div class="cp-line cp-line--sys">cockpit &middot; session spawned &middot; shell &rarr; default</div>' +
+                      '<div class="cp-line"><span class="cp-sigil">PS D:\\ClaudeCode&gt;</span><span class="cp-cmd-text">claude &quot;/workbench&quot;</span></div>' +
+                      '<div class="cp-line cp-line--step"><span class="cp-arrow">&#9656;</span><span class="cp-k">linear</span><span class="cp-lead"></span><span class="cp-v">pulling open issues</span></div>' +
+                      '<div class="cp-line cp-line--step"><span class="cp-arrow">&#9656;</span><span class="cp-k">memory</span><span class="cp-lead"></span><span class="cp-v">recalling compressed packs</span></div>' +
+                      '<div class="cp-line cp-line--step"><span class="cp-arrow">&#9656;</span><span class="cp-k">bench</span><span class="cp-lead"></span><span class="cp-v">WORKBENCH.md written</span></div>' +
+                      '<div class="cp-line cp-line--sys">read-only pull &mdash; cockpit has no write path to linear</div>' +
+                      '<div class="cp-line cp-line--done">ready</div>' +
+                    '</div>' +
+
+                    '<div class="cp-script" data-script="close" hidden>' +
+                      '<div class="cp-line"><span class="cp-sigil">&gt;</span><span class="cp-cmd-text">/workbench close</span></div>' +
+                      '<div class="cp-line cp-line--step"><span class="cp-arrow">&#9656;</span><span class="cp-k">delta</span><span class="cp-lead"></span><span class="cp-v">ticket changes staged for review</span></div>' +
+                      '<div class="cp-line cp-line--halt" data-halt="confirm"><span class="cp-sigil cp-sigil--ask">?</span><span class="cp-cmd-text">confirm ticket delta</span><button type="button" class="cp-confirm">confirm</button></div>' +
+                      '<div class="cp-line cp-line--step"><span class="cp-arrow">&#9656;</span><span class="cp-k">linear</span><span class="cp-lead"></span><span class="cp-v">updated &mdash; from this terminal</span></div>' +
+                      '<div class="cp-line cp-line--step"><span class="cp-arrow">&#9656;</span><span class="cp-k">memory</span><span class="cp-lead"></span><span class="cp-v">packs written</span></div>' +
+                      '<div class="cp-line cp-line--step"><span class="cp-arrow">&#9656;</span><span class="cp-k">bench</span><span class="cp-lead"></span><span class="cp-v">WORKBENCH.md closed</span></div>' +
+                      '<div class="cp-line cp-line--done">the cockpit displayed. the pilot acted.</div>' +
+                    '</div>' +
+
+                    // Where the drawing pad pastes its PNG path — uncommitted,
+                    // no newline, exactly as drawpad.js does it.
+                    '<div class="cp-input"><span class="cp-ps">PS D:\\ClaudeCode&gt;</span><span class="cp-input-val"></span><span class="cp-caret"></span></div>' +
+                  '</div>' +
+
+                  // A real canvas, not a picture of one. Swatch colours, the
+                  // 15-deep undo cap and the eraser's 3x width are drawpad.js's.
+                  '<aside class="cp-pad" hidden>' +
+                    '<div class="cp-pad-bar">' +
+                      '<span class="cp-pad-target">&rarr; Default: claude-1</span>' +
+                      '<span class="cp-pad-tools">' +
+                        '<button type="button" class="cp-sw is-on" data-color="#111111" aria-label="black" title="black"></button>' +
+                        '<button type="button" class="cp-sw" data-color="#e05252" aria-label="red" title="red"></button>' +
+                        '<button type="button" class="cp-sw" data-color="#e8a33d" aria-label="amber" title="amber"></button>' +
+                        '<button type="button" class="cp-sw" data-color="#3fa34d" aria-label="green" title="green"></button>' +
+                        '<button type="button" class="cp-sw" data-color="#3d6fe8" aria-label="blue" title="blue"></button>' +
+                        '<button type="button" class="cp-sw" data-color="#8e4fd0" aria-label="purple" title="purple"></button>' +
+                        '<button type="button" class="cp-tool" data-width="2" aria-label="thin" title="thin">&middot;</button>' +
+                        '<button type="button" class="cp-tool is-on" data-width="5" aria-label="medium" title="medium">&#9679;</button>' +
+                        '<button type="button" class="cp-tool" data-width="10" aria-label="thick" title="thick">&#11044;</button>' +
+                        '<button type="button" class="cp-tool" data-act="eraser" aria-label="eraser" title="eraser">&#11035;</button>' +
+                        '<button type="button" class="cp-tool" data-act="undo" aria-label="undo" title="undo">&#8630;</button>' +
+                        '<button type="button" class="cp-tool" data-act="clear" aria-label="clear" title="clear">&#10005;</button>' +
+                      '</span>' +
+                    '</div>' +
+                    '<div class="cp-pad-canvas">' +
+                      '<canvas class="cp-pad-cv" width="640" height="360" aria-label="drawing pad — draw with the mouse"></canvas>' +
+                    '</div>' +
+                    '<div class="cp-pad-foot">' +
+                      '<span class="cp-pad-gallery" aria-label="today&rsquo;s drawings"></span>' +
+                      '<button type="button" class="cp-pad-send">&crarr; enter</button>' +
+                    '</div>' +
+                  '</aside>' +
+                '</div>' +
+
+                '<div class="cp-cmds">' +
+                  '<button type="button" class="cp-cmd" data-script="boot">&#9656; replay boot</button>' +
+                  '<button type="button" class="cp-cmd cp-cmd--primary" data-script="close">&#9656; replay close</button>' +
+                  '<span class="cp-hint">draw on the pad, click a shard, or replay the bracket</span>' +
+                '</div>' +
+
+                // Cockpit's own midnight job sweeps the drawings folder. The session-folding
+                // midnight job belongs to /workbench, which lives outside this app — the
+                // repo's glossary warns against exactly that conflation.
+                '<div class="cp-sys">00:00 &middot; drawings swept &mdash; nothing older than today survives</div>' +
+              '</section>' +
+
+              // Third pane: the "Data Shards" dependency tree. Bands are
+              // longest-blocker-chain depth, lanes are blocking edges, ghosts
+              // on the bottom rim are fog. Built by JS the way the real pane
+              // rebuilds itself on every Linear poll, so the placeholder below
+              // is the app's own no-project copy rather than an empty box.
+              '<section class="cp-pane cp-map">' +
+                '<header class="cp-pane-head">Star Map' +
+                  '<button type="button" class="cp-btn cp-map-fit">&#9906; fit</button>' +
+                '</header>' +
+                '<div class="cp-hud">' +
+                  '<div class="cp-hud-dest"></div>' +
+                  '<div class="cp-hud-counts"></div>' +
+                '</div>' +
+                '<div class="cp-map-body">' +
+                  '<p class="cp-map-ph">Select a project to chart its constellation.</p>' +
+                  '<div class="cp-viewport"><div class="cp-stage"><svg class="cp-lanes"></svg></div></div>' +
+                  '<div class="cp-map-legend" aria-hidden="true"></div>' +
+                '</div>' +
+              '</section>' +
+
+            '</div>' +
+
+            '<p class="cp-cap" id="cp-cap">// recreation &mdash; redrawn from the app, not a screenshot</p>' +
+          '</div>'
+        },
+
         { type: 'paragraph', html: '<p>Sessions are bracketed. Opening one pulls the live ticket state and recalls the compressed memories relevant to it. Closing one confirms the ticket delta with me, then writes compact memory packs back down. A scheduled midnight job auto-closes anything left open, so no session is left dangling and unrecorded. The compression path is <strong>designed and reviewed but not yet proven at volume</strong>; it’s the piece I’d instrument next.</p>' }
       ]
     }
