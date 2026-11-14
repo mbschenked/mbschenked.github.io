@@ -26,6 +26,12 @@
   --green-dim:    rgba(66,196,122,0.09);
   --green-border: rgba(66,196,122,0.25);
 
+  --puffjump:        #FF8FB1;
+  --puffjump-dim:    rgba(255,143,177,0.09);
+  --puffjump-border: rgba(255,143,177,0.25);
+  --puffjump-sky:    #8FD3FF;
+  --puffjump-sky-dim: rgba(143,211,255,0.09);
+
   --text:         #adb1c4;
   --text-bright:  #d4d8e8;
   --muted:        #828799;
@@ -105,6 +111,18 @@ body.is-accent-green::before {
       rgba(7, 8, 12, 0)        48%,
       rgba(46, 184, 204, 0.10) 76%,
       rgba(46, 184, 204, 0.22) 100%
+    );
+}
+/* PuffJump route: pink warm side, sky-blue cool side. */
+body.is-accent-puffjump::before {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 143, 177, 0.24) 0%,
+      rgba(255, 143, 177, 0.10) 22%,
+      rgba(7, 8, 12, 0)         48%,
+      rgba(143, 211, 255, 0.10) 76%,
+      rgba(143, 211, 255, 0.20) 100%
     );
 }
 
@@ -3943,3 +3961,213 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .section-widget { max-width: 100%; }
 
 /* ── end Cockpit widget ── */
+
+/* =========================================================================
+   AI-Augmented Development sub-pages
+   The landing row shows top-level projects only; the #ai page lists its
+   sub-projects in 'subproject-grid' sections (Games / Dev Tools), and each
+   sub-page links back to #ai from its sidebar and footer.
+   ========================================================================= */
+.project-tiles__grid--sub { margin-top: 1.2rem; }
+.project-tiles__grid--sub .project-tile { max-width: 260px; }
+[data-accent="green"] .project-tiles__grid--sub .project-tile:hover { outline-color: var(--green-border); }
+
+/* Sidebar back link on sub-pages: "← AI-Augmented Development · Games". */
+.side__parent-link {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--green);
+  margin: 0 0 0.9rem;
+  transition: color 0.15s ease;
+}
+.side__parent-link:hover { color: var(--white); }
+.side__parent-group { color: var(--muted); }
+
+/* Tile fallback when a project has neither thumb nor tileArt. */
+.project-tile__art--mono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 4.5rem;
+  letter-spacing: 0.04em;
+  color: var(--green);
+  background:
+    repeating-linear-gradient(0deg, rgba(66, 196, 122, 0.06) 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(90deg, rgba(66, 196, 122, 0.06) 0 1px, transparent 1px 22px),
+    var(--surface-2);
+  padding-bottom: 3.5rem;   /* keep the glyph clear of the label strip */
+}
+
+/* Footer links beyond the single "Next →": prev, and the sub-page parent. */
+.proj-footer__prev { text-align: left; }
+.proj-footer__parent { text-align: left; margin-right: auto; }
+.proj-footer__parent strong { color: var(--green); }
+/* Sub-page footer with only the parent link: keep it on the left. */
+.proj-footer--start { justify-content: flex-start; }
+[data-accent="tbh"] .proj-footer a:hover { color: var(--tbh); }
+[data-accent="green"] .proj-footer a:hover { color: var(--green); }
+[data-accent="puffjump"] .proj-footer a:hover { color: var(--puffjump); }
+
+/* =========================================================================
+   PuffJump accent (AI-Augmented → Games) — mirrors every [data-accent="tbh"]
+   hook. Pink (--puffjump) is the primary accent; sky (--puffjump-sky) is
+   secondary. Ported from Portfolio-0.2/styles.css.
+   ========================================================================= */
+[data-accent="puffjump"] .side__project-sub { color: var(--puffjump-sky); }
+[data-accent="puffjump"] .side__icon { color: var(--puffjump); }
+[data-accent="puffjump"] .side__tool-icon:hover { color: var(--puffjump); }
+[data-accent="puffjump"] .side__takeaways li::before { color: var(--puffjump); }
+[data-accent="puffjump"] .side__takeaways .bullet-lead { color: var(--puffjump); }
+[data-accent="puffjump"] .hero-scroll-indicator { color: var(--puffjump); }
+[data-accent="puffjump"] .pillar-num { color: var(--puffjump); }
+[data-accent="puffjump"] .project-tile.is-current { outline-color: var(--puffjump); }
+[data-accent="puffjump"] .section-block__num { color: var(--puffjump); }
+[data-accent="puffjump"] .btn-ghost:hover {
+  border-color: var(--puffjump);
+  color: var(--puffjump);
+}
+[data-accent="puffjump"] .btn-ghost:focus-visible { outline-color: var(--puffjump); }
+[data-accent="puffjump"] .proj-outro.visible .proj-outro__title {
+  animation: proj-outro-glow-puffjump 2.6s ease-in-out infinite alternate;
+}
+@keyframes proj-outro-glow-puffjump {
+  from { text-shadow: 0 0 12px rgba(255, 143, 177, 0.30); }
+  to   { text-shadow: 0 0 28px rgba(255, 143, 177, 0.70), 0 0 50px rgba(143, 211, 255, 0.28); }
+}
+[data-accent="puffjump"] .proj-outro__spark { color: var(--puffjump-sky); }
+[data-accent="puffjump"] .sec-header__bigtitle { color: var(--puffjump); }
+[data-accent="puffjump"] .sec-header__subtitle { color: var(--puffjump-sky); }
+[data-accent="puffjump"] .sec-header__num {
+  border-color: var(--puffjump);
+  color: var(--puffjump);
+}
+[data-accent="puffjump"] .sec-header__sec-subtitle { color: var(--puffjump-sky); }
+[data-accent="puffjump"] .sec-header__overview-divider {
+  background: linear-gradient(180deg, transparent 4%, var(--puffjump) 50%, transparent 96%);
+}
+[data-accent="puffjump"] .overview-takeaways li::before { color: var(--puffjump); }
+[data-accent="puffjump"] .overview-takeaways .bullet-lead { color: var(--puffjump); }
+/* Shared tbh-* section primitives (role block, team highlight) re-tinted
+   when reused inside the PuffJump page. */
+[data-accent="puffjump"] .tbh-role-label,
+[data-accent="puffjump"] .tbh-role-block li::before { color: var(--puffjump); }
+[data-accent="puffjump"] .team-member.highlight {
+  border-color: var(--puffjump-border);
+  background: var(--puffjump-dim);
+}
+
+/* PuffJump badge + CTA button */
+.badge-puffjump {
+  color: var(--puffjump);
+  background: var(--puffjump-dim);
+  border-color: var(--puffjump-border);
+}
+.badge-puffjump-sky {
+  color: var(--puffjump-sky);
+  background: var(--puffjump-sky-dim);
+  border-color: rgba(143,211,255,0.25);
+}
+.btn-puffjump {
+  background: var(--puffjump);
+  color: #07080c;
+  border-color: var(--puffjump);
+}
+.btn-puffjump:hover {
+  background: var(--puffjump-sky);
+  border-color: var(--puffjump-sky);
+}
+.btn-puffjump:focus-visible {
+  outline: 2px solid var(--puffjump-sky);
+  outline-offset: 3px;
+}
+/* ── end AI-Augmented band + PuffJump accent ── */
+
+/* ── Sub-page sibling strip (Dev Tools tabs): short, sticks under the header ── */
+.sub-strip {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 1.5rem;
+  padding: 8px 0;
+  background: rgba(7, 8, 12, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sub-strip::-webkit-scrollbar { display: none; }
+.sub-strip__label {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+.sub-strip__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  transition: border-color .15s, background .15s;
+}
+.sub-strip__tab:hover { border-color: var(--green-border); }
+.sub-strip__tab.is-current { border-color: var(--green); background: var(--green-dim); color: var(--green); }
+.sub-strip__ico { display: inline-flex; width: 28px; height: 16px; color: var(--green); }
+.sub-strip__ico svg { width: 100%; height: 100%; }
+.sub-strip__sep { color: var(--border); margin: 0 6px; font-size: 1.1rem; }
+.sub-strip__label:not(:first-child) { margin-left: 2px; }
+.sub-strip__thumb { width: 28px; height: 16px; object-fit: cover; border-radius: 2px; }
+/* Dev Tool pages: just a small title above the tool */
+.section-prose .dt-title { font-size: 1.35rem; margin: 0 0 .6rem; letter-spacing: .01em; }
+/* Game / Dev Tool sub-pages: smaller sidebar title so long names stay on one line */
+.side__project-title.side__project-title--sub { font-size: 1.05rem; line-height: 1.25; }
+.section-prose .dt-note { margin: -0.3rem 0 0.8rem; font-size: 0.9rem; color: var(--text-dim, #9aa3ad); }
+
+/* Games + Dev Tools sit side by side on #ai (wrapper built in renderAllSections). */
+.proj-subrow {
+  display: flex;
+  flex-wrap: wrap;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.proj-subrow > .proj-section { border-top: none; flex: 0 1 auto; padding-right: 1.5rem; }
+.proj-subrow > .proj-section + .proj-section { padding-left: 1.5rem; border-left: 1px solid rgba(255,255,255,0.08); }
+.proj-subrow .project-tiles__grid--sub { flex-wrap: nowrap; }
+@media (max-width: 720px) {
+  .proj-subrow > .proj-section + .proj-section { border-left: none; padding-left: var(--content-pad); }
+  .proj-subrow .project-tiles__grid--sub { flex-wrap: wrap; }
+}
+
+/* Inline demos on #ai — clear the site header + sticky Games | Dev Tools strip. */
+.proj-inline { scroll-margin-top: calc(var(--header-h) + 3.2rem); border-top: 1px solid rgba(255,255,255,0.08); }
+.proj-inline .proj-section { scroll-margin-top: calc(var(--header-h) + 3.2rem); }
+.proj-inline > .proj-section:first-child { border-top: none; }
+
+/* #ai: strip docked after the Games / Dev Tools tiles; hidden until they scroll past. */
+.sub-strip-dock { position: sticky; top: var(--header-h); height: 0; z-index: 40; }
+.sub-strip-dock > .sub-strip {
+  position: absolute; top: 0; left: 0; right: 0; margin: 0;
+  padding-left: var(--content-pad); padding-right: var(--content-pad);
+  opacity: 0; transform: translateY(-8px); pointer-events: none; visibility: hidden;
+  transition: opacity .18s ease, transform .18s ease, visibility 0s linear .18s;
+}
+.sub-strip-dock.is-shown > .sub-strip {
+  opacity: 1; transform: none; pointer-events: auto; visibility: visible;
+  transition: opacity .18s ease, transform .18s ease;
+}

@@ -1,7 +1,8 @@
 /* =========================================================================
    Portfolio-0.2 — router + render engine (v2 scroll-spy layout)
    Vanilla JS, no build step. Hash routing:
-     #tog | #tbh | #ai → project page (all sections rendered, scroll-based nav)
+     #tog | #tbh | #ai | #puffjump | #tool-* → project page (all sections
+                  rendered, scroll-based nav)
      #bio          → about page
    Empty / unknown hash → falls back to #tog.
 
@@ -14,7 +15,27 @@
   // ── Constants ────────────────────────────────────────────────────────────
   var DEFAULT_LVL = 'tog';
   var MOBILE_BREAKPOINT = 900;
-  var PROJECT_ORDER = ['tog', 'tbh', 'ai'];
+  // Display order across all groups (routing + prev/next). Slugs whose data
+  // file didn't load are skipped everywhere, so a missing projects/*.js file
+  // just drops that tile instead of breaking the page.
+  var PROJECT_ORDER = [
+    'tog', 'tbh', 'ai',
+    'puffjump',                                                    // ai-games
+    'tool-jump-trajectory', 'tool-cam-shake', 'tool-bullet-vfx'    // ai-tools
+  ];
+  // Landing-page layout. The landing row shows only top-level projects:
+  // those with no `group`, plus the #ai overview ('ai-overview'). Projects in
+  // 'ai-games' / 'ai-tools' are sub-pages of #ai: they appear only as tile
+  // grids inside the #ai page ('subproject-grid' sections) and never on the
+  // landing row or the #bio Projects list.
+  // Unknown group keys fall back to top level so a typo never hides a project.
+  var AI_PARENT_GROUP = 'ai-overview';
+  var SUB_GROUPS = {
+    'ai-games': 'Games',
+    'ai-tools': 'Dev Tools'
+  };
+  // Accents that have their own body gradient / CTA button class in styles.css.
+  var ACCENTS = ['amber', 'tbh', 'green', 'puffjump'];
 
   // Placeholder hero asset — Phase B will surface real candidates.
   var PLACEHOLDER_HERO = {
@@ -178,21 +199,48 @@
     if (!window.PROJECTS) return null;
     return window.PROJECTS[lvl] || null;
   }
-  // Next project in PROJECT_ORDER, wrapping at the end — tog → tbh → ai → tog.
-  // Index-based rotation rather than "first slug that isn't the current one",
-  // so every project gets a distinct neighbor once there are more than two.
-  // Unknown slugs start the walk at index 0; missing/unregistered projects are
-  // skipped, and a lone registered project yields null (no footer link).
-  function otherProjectSlug(lvl) {
-    var n = PROJECT_ORDER.length;
-    if (!n) return null;
-    var start = PROJECT_ORDER.indexOf(lvl);
-    if (start === -1) start = n - 1; // unknown current → next is PROJECT_ORDER[0]
-    for (var step = 1; step <= n; step++) {
-      var slug = PROJECT_ORDER[(start + step) % n];
-      if (slug !== lvl && getProject(slug)) return slug;
-    }
-    return null;
+  // Slugs in PROJECT_ORDER whose data actually loaded.
+  function availableProjects() {
+    return PROJECT_ORDER.filter(function (slug) { return !!getProject(slug); });
+  }
+  // Normalised group key for a project (null = plain top-level project). The
+  // #ai page is the overview even if its data file predates `group`.
+  function groupOf(slug) {
+    var p = getProject(slug);
+    if (!p) return null;
+    var g = p.group || (slug === 'ai' ? AI_PARENT_GROUP : null);
+    return (g === AI_PARENT_GROUP || SUB_GROUPS.hasOwnProperty(g)) ? g : null;
+  }
+  // Loaded slugs belonging to one group.
+  function projectsInGroup(key) {
+    return availableProjects().filter(function (slug) { return groupOf(slug) === key; });
+  }
+  function isSubProject(slug) { return SUB_GROUPS.hasOwnProperty(groupOf(slug)); }
+  // Top-level slugs: landing row, #bio list, main prev/next cycle (tog → tbh → ai).
+  function topLevelProjects() {
+    return availableProjects().filter(function (slug) { return !isSubProject(slug); });
+  }
+  // The page sub-projects hang under (#ai), or null if it didn't load.
+  function parentSlug() {
+    return projectsInGroup(AI_PARENT_GROUP)[0] || null;
+  }
+  // Sections that actually render: a subproject-grid whose group is empty is
+  // dropped everywhere (content, Jump-to-Section list, scroll-spy).
+  function visibleSections(p) {
+    return (p.sections || []).filter(function (sec) {
+      if (sec.type === 'subproject-inline') return !!getProject(sec.slug);
+      return sec.type !== 'subproject-grid' || projectsInGroup(sec.group).length > 0;
+    });
+  }
+  function clearAccentClasses() {
+    ACCENTS.forEach(function (a) { document.body.classList.remove('is-accent-' + a); });
+  }
+  function accentOf(p) {
+    return (p && p.accent && ACCENTS.indexOf(p.accent) !== -1) ? p.accent : 'amber';
+  }
+  function titleOf(slug) {
+    var p = getProject(slug);
+    return (p && p.title) || slug;
   }
 
   // ── Tiny DOM helper ──────────────────────────────────────────────────────
@@ -269,18 +317,35 @@
     teardownHeroCanvas();
     teardownHeroScrollObs();
     teardownCockpit();
+    teardownWidgetMounts();
+    teardownStripDock();
     pauseLiveVideos();
     heroMount.innerHTML = '';
     contentMount.innerHTML = '';
 
-    heroMount.setAttribute('data-accent', p.accent || 'amber');
-    document.body.classList.remove('is-accent-amber', 'is-accent-tbh', 'is-accent-green');
-    document.body.classList.add('is-accent-' + (p.accent || 'amber'));
+    var accent = accentOf(p);
+    heroMount.setAttribute('data-accent', accent);
+    clearAccentClasses();
+    document.body.classList.add('is-accent-' + accent);
     heroMount.appendChild(renderHero(p));
 
-    var inner = el('div', { class: 'content__inner', 'data-accent': p.accent || 'amber' });
+    var inner = el('div', { class: 'content__inner', 'data-accent': accent });
     inner.appendChild(renderProjectTiles(p.slug));   // tiles start at sidebar's Y; sections follow
-    inner.appendChild(renderAllSections(p));
+    var strip = renderSiblingStrip(p.slug);           // AI pages: sticky Games | Dev Tools strip
+    var sectionsHost = renderAllSections(p);
+    var subRow = sectionsHost.querySelector('.proj-subrow');
+    if (strip && subRow) {
+      // #ai: the strip only shows once the Games / Dev Tools tiles are
+      // scrolled past. A zero-height sticky dock right after the tiles holds
+      // it, so it takes no space and can't appear above them.
+      var dock = el('div', { class: 'sub-strip-dock' });
+      dock.appendChild(strip);
+      subRow.parentNode.insertBefore(dock, subRow.nextSibling);
+      wireStripDock(dock);
+    } else if (strip) {
+      inner.appendChild(strip);
+    }
+    inner.appendChild(sectionsHost);
     inner.appendChild(renderProjectOutro(p));
     var footer = renderProjectFooter(p.slug);
     if (footer) inner.appendChild(footer);
@@ -295,6 +360,7 @@
     trackLiveVideos(contentMount);
     wirePreviewTriggers(contentMount);
     wireCockpit(contentMount);
+    runWidgetMounts();
   }
 
   // ── Hero banner ──────────────────────────────────────────────────────────
@@ -362,9 +428,19 @@
   // ── All-sections render ──────────────────────────────────────────────────
   function renderAllSections(p) {
     var host = el('div', { class: 'proj-sections' });
-    (p.sections || []).forEach(function (sec) {
+    // Back-to-back subproject-grid sections (Games, Dev Tools) share one
+    // row so the groups sit side by side instead of stacking.
+    var subRow = null;
+    visibleSections(p).forEach(function (sec) {
       var node = renderSectionByType(sec, p);
-      if (node) host.appendChild(node);
+      if (!node) return;
+      if (sec.type === 'subproject-grid') {
+        if (!subRow) { subRow = el('div', { class: 'proj-subrow' }); host.appendChild(subRow); }
+        subRow.appendChild(node);
+      } else {
+        subRow = null;
+        host.appendChild(node);
+      }
     });
     return host;
   }
@@ -380,6 +456,8 @@
   //   { type: 'media',     id, label, title?, body?,
   //                        media: {kind:'video'|'youtube'|'image', src|youtubeId, poster?, caption?} }
   //   { type: 'media-row', id, label, title?, body?, rows: [{caption?, clips:[{src, poster?, figcaption?}]}] }
+  //   { type: 'subproject-grid', id, label, group, title?, body? }
+  //                        → tile grid of loaded projects in `group`; skipped when empty
   function renderSectionByType(sec, project) {
     switch (sec.type) {
       case 'header':     return renderSecHeader(sec, project);
@@ -388,6 +466,8 @@
       case 'prose':      return renderSecProse(sec);
       case 'media':      return renderSecMedia(sec);
       case 'media-row':  return renderSecMediaRow(sec);
+      case 'subproject-grid': return renderSecSubprojectGrid(sec);
+      case 'subproject-inline': return renderSecSubprojectInline(sec);
       default:
         console.warn('[Portfolio-0.2] Unknown section type:', sec.type);
         return null;
@@ -726,6 +806,54 @@
     return wrap;
   }
 
+  // ── Section: subproject-grid (tiles for one sub-project group) ──────────
+  function renderSecSubprojectGrid(sec) {
+    var slugs = projectsInGroup(sec.group);
+    if (!slugs.length) return null;
+    var s = sectionShell(sec);
+    var titleId = sec.id + '-title';
+    s.setAttribute('aria-labelledby', titleId);
+    s.appendChild(el('h2', { id: titleId, class: 'proj-section__title' }, sec.title || SUB_GROUPS[sec.group] || sec.label || ''));
+    if (sec.body) s.appendChild(el('div', { class: 'section-prose', html: sec.body }));
+    // In-place swap that lands at the projects row (under the hero), like the
+    // footer links — a hash-route jump would snap the viewer back to the hero.
+    s.appendChild(renderTileGrid(slugs, null, { cls: 'project-tiles__grid--sub', onPick: goToInline }));
+    return s;
+  }
+
+  // ── Section: subproject-inline (a whole game / tool shown on #ai) ───────
+  // Renders every section of the sub-project inside one wrapper, so the
+  // #ai page holds the playable demos and tiles just scroll down to them.
+  // Child ids are prefixed with the wrapper id so they never collide.
+  function renderSecSubprojectInline(sec) {
+    var q = getProject(sec.slug);
+    if (!q) return null;
+    var wrap = el('div', { id: sec.id, class: 'proj-inline', 'data-section-id': sec.id, 'data-slug': sec.slug });
+    (q.sections || []).forEach(function (child) {
+      var copy = Object.assign({}, child, { id: sec.id + '--' + child.id });
+      var node = renderSectionByType(copy, q);
+      if (node) wrap.appendChild(node);
+    });
+    return wrap;
+  }
+
+  // Id of the #ai section that shows `slug` inline, or null.
+  function inlineIdFor(slug) {
+    var parent = getProject(parentSlug());
+    var hit = parent && (parent.sections || []).find(function (s) { return s.type === 'subproject-inline' && s.slug === slug; });
+    return hit ? hit.id : null;
+  }
+
+  // Tile / strip click: scroll to the inline copy on #ai. From a sub-page,
+  // swap to #ai first, landing on that copy.
+  function goToInline(slug) {
+    var id = inlineIdFor(slug);
+    if (!id) { navigateInline(slug, 'content'); return; }
+    if (currentLvl !== parentSlug()) { navigateInline(parentSlug(), 'content:' + id); return; }
+    var target = document.getElementById(id);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   // ── Section: prose ───────────────────────────────────────────────────────
   function renderSecProse(sec) {
     var s = sectionShell(sec);
@@ -763,6 +891,10 @@
       case 'widget': {
         var w = el('div', { class: 'section-widget' });
         w.innerHTML = block.html || '';
+        // innerHTML never runs <script>, so an interactive widget supplies
+        // `mount(el)` instead; it runs once the page is in the DOM and may
+        // return a cleanup function for the next route change.
+        if (typeof block.mount === 'function') pendingMounts.push({ el: w, fn: block.mount });
         return w;
       }
       case 'list': {
@@ -920,13 +1052,77 @@
   }
 
   // ── Project tiles (peeking at fold, inside content pane) ─────────────────
+  // One "Projects" row of top-level projects only. On a sub-page the parent
+  // (#ai) tile carries the current outline, since that's where the reader is.
+  // AI pages (the #ai parent and every Games / Dev Tools sub-page) get one
+  // short horizontal strip: "GAMES  Paper Puff  |  DEV TOOLS  a  b  c".
+  // It sticks under the site header so any game or tool is one click away
+  // from anywhere on the page.
+  function renderSiblingStrip(slug) {
+    if (!isSubProject(slug) && slug !== parentSlug()) return null;
+    var groups = Object.keys(SUB_GROUPS).filter(function (g) { return projectsInGroup(g).length; });
+    if (!groups.length) return null;
+    var nav = el('nav', { class: 'sub-strip', 'aria-label': 'Games and Dev Tools' });
+    groups.forEach(function (g, gi) {
+      if (gi) nav.appendChild(el('span', { class: 'sub-strip__sep', 'aria-hidden': 'true' }, '|'));
+      nav.appendChild(el('span', { class: 'sub-strip__label' }, SUB_GROUPS[g]));
+      projectsInGroup(g).forEach(function (s) {
+        var q = getProject(s);
+        if (!q) return;
+        var isCur = s === slug;
+        var a = el('a', { href: '#' + s, class: 'sub-strip__tab' + (isCur ? ' is-current' : ''), 'aria-current': isCur ? 'page' : null });
+        if (q.tileArt) a.appendChild(el('span', { class: 'sub-strip__ico', 'aria-hidden': 'true', html: q.tileArt }));
+        else if (q.thumb) a.appendChild(el('img', { class: 'sub-strip__thumb', src: q.thumb, alt: '', loading: 'lazy' }));
+        a.appendChild(document.createTextNode(titleOf(s)));
+        a.addEventListener('click', function (e) {
+          e.preventDefault();
+          goToInline(s);
+        });
+        nav.appendChild(a);
+      });
+    });
+    return nav;
+  }
+
+  // Shows the docked strip once its dock has reached the site header,
+  // i.e. the tiles above it have scrolled out of view.
+  var stripDockOff = null;
+  function wireStripDock(dock) {
+    function update() {
+      var headerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 70;
+      dock.classList.toggle('is-shown', dock.getBoundingClientRect().top <= headerH + 1);
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    requestAnimationFrame(update);
+    stripDockOff = function () {
+      window.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }
+  function teardownStripDock() {
+    if (stripDockOff) { stripDockOff(); stripDockOff = null; }
+  }
+
   function renderProjectTiles(activeLvl) {
     currentLvl = activeLvl;
     var wrap = el('section', { class: 'project-tiles', 'aria-label': 'Projects' });
+    var slugs = topLevelProjects();
+    if (!slugs.length) return wrap;
+    var markLvl = (activeLvl && isSubProject(activeLvl)) ? parentSlug() : activeLvl;
     wrap.appendChild(el('h3', { class: 'project-tiles__label' }, 'Projects'));
+    wrap.appendChild(renderTileGrid(slugs, markLvl));
+    return wrap;
+  }
 
-    var grid = el('div', { class: 'project-tiles__grid' });
-    PROJECT_ORDER.forEach(function (slug) {
+  // opts.cls    extra grid class
+  // opts.inline false → plain hash links (page opens at top); default true →
+  //             in-place swap that preserves scroll (landing row behaviour)
+  function renderTileGrid(slugs, activeLvl, opts) {
+    opts = opts || {};
+    var inline = opts.inline !== false;
+    var grid = el('div', { class: 'project-tiles__grid' + (opts.cls ? ' ' + opts.cls : '') });
+    slugs.forEach(function (slug) {
       var p = getProject(slug);
       if (!p) return;
       var isCurrent = (slug === activeLvl);
@@ -934,31 +1130,41 @@
         href: '#' + slug,
         class: 'project-tile' + (isCurrent ? ' is-current' : ''),
         'data-lvl': slug,
-        'aria-current': isCurrent ? 'page' : null
+        'aria-current': (isCurrent && slug === currentLvl) ? 'page' : null
       });
       // In-content click → swap project content in place (preserve scroll);
       // re-clicking the current tile is a no-op so it doesn't jump to top.
-      (function (clickedSlug) {
-        tile.addEventListener('click', function (e) {
-          e.preventDefault();
-          if (clickedSlug === currentLvl) return;
-          navigateInline(clickedSlug, 'preserve');
-        });
-      })(slug);
+      if (inline) {
+        (function (clickedSlug) {
+          tile.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (opts.onPick) { opts.onPick(clickedSlug); return; }
+            if (clickedSlug === currentLvl) return;
+            navigateInline(clickedSlug, opts.scrollMode || 'preserve');
+          });
+        })(slug);
+      }
+      var title = titleOf(slug);
       var thumb = tileThumbFor(p);
-      if (thumb) tile.appendChild(el('img', { class: 'project-tile__img', src: thumb, alt: p.title, loading: 'lazy' }));
+      if (thumb) tile.appendChild(el('img', { class: 'project-tile__img', src: thumb, alt: title, loading: 'lazy' }));
       // Projects with no photographic thumb can supply generated tile art
       // (inline SVG/HTML string) instead — e.g. the AI page's glitch glyph.
       else if (p.tileArt) tile.appendChild(el('div', { class: 'project-tile__art', 'aria-hidden': 'true', html: p.tileArt }));
+      // Neither → a plain monogram panel so the tile never renders blank.
+      else tile.appendChild(el('div', { class: 'project-tile__art project-tile__art--mono', 'aria-hidden': 'true' }, monogramOf(title)));
       var label = el('span', { class: 'project-tile__label' });
-      label.appendChild(document.createTextNode(p.title));
+      label.appendChild(document.createTextNode(title));
       var sub = (p.subtitle || '').replace(/^\/\/\s*/, '');
       if (sub) label.appendChild(el('small', null, sub));
       tile.appendChild(label);
       grid.appendChild(tile);
     });
-    wrap.appendChild(grid);
-    return wrap;
+    return grid;
+  }
+
+  function monogramOf(title) {
+    var words = String(title || '').split(/[\s\-]+/).filter(Boolean);
+    return words.slice(0, 2).map(function (w) { return w.charAt(0).toUpperCase(); }).join('') || '?';
   }
 
   // Best-available thumb: explicit p.thumb → first gallery image → null.
@@ -976,10 +1182,7 @@
   // glow + spark twinkle only run once .visible is set by the fade-up
   // observer, so the celebration triggers on scroll-into-view.
   function renderProjectOutro(p) {
-    var primaryBtnCls =
-      (p.accent === 'tbh')   ? 'btn-tbh' :
-      (p.accent === 'green') ? 'btn-green' :
-                               'btn-amber';
+    var primaryBtnCls = 'btn-' + accentOf(p);
     var outro = el('section', { class: 'proj-outro fade-up', 'aria-label': 'End of project — contact' });
 
     var headline = el('div', { class: 'proj-outro__headline' });
@@ -1020,28 +1223,43 @@
   }
 
   // ── Next-project footer ──────────────────────────────────────────────────
-  // Single "Next Project →" link, pointing at the next slug in PROJECT_ORDER
-  // (wrapping at the end). The layout stays single-link by choice: the tile
-  // grid above already offers direct access to every project, so a prev/next
-  // pair would just duplicate it.
+  // Top-level pages cycle through top-level projects only (tog → tbh → ai).
+  // Sub-pages (#puffjump, #tool-*) offer "← <parent>" plus prev/next
+  // within their own group when it has more than one loaded project.
+  // With exactly two in a cycle, prev and next would both point at the same
+  // neighbor — render only the "Next →" link. With 3+, render both.
   function renderProjectFooter(activeLvl) {
-    var other = otherProjectSlug(activeLvl);
-    if (!other) return null;
-    var otherP = getProject(other);
-    if (!otherP) return null;
+    var sub = isSubProject(activeLvl);
+    var order = sub ? projectsInGroup(groupOf(activeLvl)) : topLevelProjects();
+    var idx = order.indexOf(activeLvl);
+    var parent = sub ? parentSlug() : null;
+    var hasCycle = idx !== -1 && order.length >= 2;
+    if (!hasCycle && !parent) return null;
 
-    var footer = el('footer', { class: 'proj-footer proj-footer--single' });
-    var next = el('a', { class: 'proj-footer__next', href: '#' + other });
-    next.appendChild(document.createTextNode('Next Project →'));
-    next.appendChild(el('strong', null, otherP.title));
-    // Next-project nav lands at the project-tiles row, not the page top —
-    // viewer has already seen the global hero by the time they're at the footer.
-    next.addEventListener('click', function (e) {
-      e.preventDefault();
-      navigateInline(other, 'projects-row');
-    });
-    footer.appendChild(next);
+    var footer = el('footer', { class: 'proj-footer' });
+    var noun = sub ? (SUB_GROUPS[groupOf(activeLvl)] === 'Games' ? 'Game' : 'Tool') : 'Project';
+    if (parent) footer.appendChild(footerLink(parent, 'proj-footer__parent', '← Back to', 'content:' + groupOf(activeLvl)));
+    if (hasCycle) {
+      var nextSlug = order[(idx + 1) % order.length];
+      var prevSlug = order[(idx - 1 + order.length) % order.length];
+      if (order.length > 2) footer.appendChild(footerLink(prevSlug, 'proj-footer__prev', '← Last ' + noun));
+      footer.appendChild(footerLink(nextSlug, 'proj-footer__next', 'Next ' + noun + ' →'));
+    }
+    if (footer.children.length === 1) footer.classList.add(parent ? 'proj-footer--start' : 'proj-footer--single');
     return footer;
+  }
+
+  function footerLink(slug, cls, caption, scrollMode) {
+    var link = el('a', { class: cls, href: '#' + slug });
+    link.appendChild(document.createTextNode(caption));
+    link.appendChild(el('strong', null, titleOf(slug)));
+    // Footer nav lands at the project-tiles row, not the page top —
+    // viewer has already seen the global hero by the time they're at the footer.
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      navigateInline(slug, scrollMode || (isSubProject(slug) ? 'content' : 'projects-row'));
+    });
+    return link;
   }
 
   // ═════════════════════════════════════════════════════════════════════════
@@ -1060,9 +1278,25 @@
 
   function rebuildSidebar(p) {
     sidebarMount.innerHTML = '';
-    sidebarMount.setAttribute('data-accent', p.accent || 'amber');
+    sidebarMount.setAttribute('data-accent', accentOf(p));
 
-    sidebarMount.appendChild(el('h2', { class: 'side__project-title' }, p.title));
+    // Sub-pages announce where they belong: a back link to the parent page
+    // plus the group name (e.g. "AI-Augmented Development · Games").
+    var parent = isSubProject(p.slug) ? parentSlug() : null;
+    if (parent) {
+      var back = el('a', { href: '#' + parent, class: 'side__parent-link' });
+      back.appendChild(el('span', { class: 'side__parent-arrow', 'aria-hidden': 'true' }, '←'));
+      back.appendChild(document.createTextNode(' ' + titleOf(parent)));
+      back.appendChild(el('span', { class: 'side__parent-group' }, ' · ' + SUB_GROUPS[groupOf(p.slug)]));
+      (function (parentSlugVal, groupSection) {
+        back.addEventListener('click', function (e) {
+          e.preventDefault();
+          navigateInline(parentSlugVal, 'content:' + groupSection);
+        });
+      })(parent, groupOf(p.slug));
+      sidebarMount.appendChild(back);
+    }
+    sidebarMount.appendChild(el('h2', { class: 'side__project-title' + (parent ? ' side__project-title--sub' : '') }, p.title));
     if (p.subtitle) {
       var sub = String(p.subtitle).replace(/^\/\/\s*/, '');
       sidebarMount.appendChild(el('div', { class: 'side__project-sub' }, sub));
@@ -1074,7 +1308,7 @@
       sidebarMount.appendChild(timelineWrap);
     }
 
-    if (p.sections && p.sections.length) {
+    if (visibleSections(p).length) {
       sidebarMount.appendChild(blockLabelRow('Jump to Section'));
       sidebarMount.appendChild(renderTOC(p));
     }
@@ -1120,7 +1354,7 @@
 
   function renderTOC(p) {
     var ol = el('ol', { class: 'side__toc' });
-    (p.sections || []).forEach(function (sec, idx) {
+    visibleSections(p).forEach(function (sec, idx) {
       var num = String(idx + 1).padStart(2, '0');
       var li = el('li', {
         class: 'side__toc-item' + (idx === 0 ? ' is-active' : ''),
@@ -1191,6 +1425,7 @@
     pauseLiveVideos();
     teardownHeroCanvas();
     teardownCockpit();
+    teardownWidgetMounts();
     heroMount.innerHTML = '';
     contentMount.innerHTML = '';
     sidebarMount.innerHTML = '';
@@ -1198,7 +1433,7 @@
     heroMount.setAttribute('data-accent', 'amber');
     // Clear every project accent, not just tbh — otherwise #ai → #bio leaves
     // the green body wash behind while the rest of the page renders amber.
-    document.body.classList.remove('is-accent-amber', 'is-accent-tbh', 'is-accent-green');
+    clearAccentClasses();
     document.body.classList.add('is-accent-amber');
 
     var data = window.ABOUT || {};
@@ -1206,16 +1441,12 @@
     // Minimal sidebar for #bio — just an identifier + nav back to projects.
     sidebarMount.appendChild(el('h2', { class: 'side__project-title' }, data.title || 'Max Schenk'));
     sidebarMount.appendChild(el('div', { class: 'side__project-sub' }, 'About'));
-    sidebarMount.appendChild(blockLabelRow('Projects'));
-    var projList = el('ul', { class: 'side__tools' });
-    PROJECT_ORDER.forEach(function (slug) {
-      var p = getProject(slug);
-      if (!p) return;
-      var li = el('li');
-      li.appendChild(el('a', { href: '#' + slug, class: 'side__project-link' }, p.title));
-      projList.appendChild(li);
-    });
-    sidebarMount.appendChild(projList);
+    // Top-level projects only — sub-pages are reached from the #ai page.
+    var topSlugs = topLevelProjects();
+    if (topSlugs.length) {
+      sidebarMount.appendChild(blockLabelRow('Projects'));
+      sidebarMount.appendChild(sideProjectList(topSlugs));
+    }
 
     // Bio hero (particle canvas) lives in the full-width hero-mount, matching the project-page pattern.
     var heroBanner = el('div', { class: 'bio-hero fade-up' });
@@ -1268,6 +1499,43 @@
 
     rebuildFadeObserver();
     initHeroCanvas();
+  }
+
+  function sideProjectList(slugs) {
+    var list = el('ul', { class: 'side__tools' });
+    slugs.forEach(function (slug) {
+      var li = el('li');
+      li.appendChild(el('a', { href: '#' + slug, class: 'side__project-link' }, titleOf(slug)));
+      list.appendChild(li);
+    });
+    return list;
+  }
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // Widget mount hooks — prose `widget` blocks with a mount(el) function
+  // ═════════════════════════════════════════════════════════════════════════
+  // A failing mount is logged and skipped; it never takes the page down.
+  var pendingMounts = [];   // queued during render: { el, fn }
+  var activeCleanups = [];  // cleanup fns returned by mounts on the live page
+  function runWidgetMounts() {
+    var queue = pendingMounts;
+    pendingMounts = [];
+    queue.forEach(function (m) {
+      try {
+        var cleanup = m.fn(m.el);
+        if (typeof cleanup === 'function') activeCleanups.push(cleanup);
+      } catch (err) {
+        if (window.console) console.error('[portfolio] widget mount failed', err);
+      }
+    });
+  }
+  function teardownWidgetMounts() {
+    pendingMounts = [];
+    var fns = activeCleanups;
+    activeCleanups = [];
+    fns.forEach(function (fn) {
+      try { fn(); } catch (err) { if (window.console) console.error('[portfolio] widget cleanup failed', err); }
+    });
   }
 
   // ═════════════════════════════════════════════════════════════════════════
@@ -1345,6 +1613,18 @@
       requestAnimationFrame(function () {
         requestAnimationFrame(function () {
           window.scrollTo({ top: savedScrollY, behavior: 'auto' });
+        });
+      });
+    } else if (scrollMode && scrollMode.indexOf('content') === 0) {
+      // 'content' → land on the new page's first section;
+      // 'content:<id>' → land on that section (e.g. back to #ai's Dev Tools).
+      var targetId = scrollMode.split(':')[1];
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          var target = (targetId && document.getElementById(targetId)) ||
+                       document.querySelector('.proj-section');
+          if (target) target.scrollIntoView({ behavior: 'auto', block: 'start' });
+          if (targetId) setActiveTocItem(targetId);
         });
       });
     } else if (scrollMode === 'projects-row') {

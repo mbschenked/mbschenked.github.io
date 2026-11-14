@@ -14,7 +14,7 @@
     rel="stylesheet"
   />
 
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=20261114j" />
 </head>
 <body>
   <!-- Sticky top header (rendered into by app.js renderShell on init, but the mount point lives here) -->
@@ -45,10 +45,16 @@
   <div id="drawer-scrim" class="drawer-scrim" hidden></div>
 
   <!-- Project data files self-register on window.PROJECTS / window.ABOUT before app.js runs -->
-  <script src="projects/tog.js"></script>
-  <script src="projects/tbh.js"></script>
-  <script src="projects/ai.js"></script>
-  <script src="projects/bio.js"></script>
-  <script src="app.js"></script>
+  <script src="projects/tog.js?v=20261114j"></script>
+  <script src="projects/tbh.js?v=20261114j"></script>
+  <script src="projects/ai.js?v=20261114j"></script>
+  <!-- AI-Augmented Development band: Games / Dev Tools. A missing file only
+       drops its tile; app.js skips any slug that did not register. -->
+  <script src="projects/puffjump.js?v=20261114j"></script>
+  <script src="projects/tool-jump-trajectory.js?v=20261114j"></script>
+  <script src="projects/tool-cam-shake.js?v=20261114j"></script>
+  <script src="projects/tool-bullet-vfx.js?v=20261114j"></script>
+  <script src="projects/bio.js?v=20261114j"></script>
+  <script src="app.js?v=20261114j"></script>
 </body>
 </html>
